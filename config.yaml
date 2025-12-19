@@ -3,7 +3,7 @@ database:
   port: 5432
   username: "admin"
   password: "admin"
-  name: "students"
+  name: "dronedelivery"
   ssl_mode: "disable"
 
 kafka:
