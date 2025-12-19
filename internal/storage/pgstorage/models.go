@@ -5,6 +5,7 @@ type Operator struct {
 	Email     string `db:"email"`
 	Name      string `db:"name"`
 	CreatedAt string `db:"created_at"`
+	Missions  []Mission
 }
 
 const (
@@ -26,6 +27,9 @@ type Mission struct {
 	destination_alt float64 `db:"destination_alt"`
 	payload_kg      float64 `db:"payload"`
 	created_at      string  `db:"created_at"`
+	Operator        Operator
+	LaunchBase      LaunchBase
+	Drones          []Drone
 }
 
 const (
@@ -49,6 +53,8 @@ type LaunchBase struct {
 	lon       float64 `db:"lon"`
 	alt       float64 `db:"alt"`
 	CreatedAt string  `db:"created_at"`
+	Missions  []Mission
+	Drones    []Drone
 }
 
 const (
@@ -69,6 +75,8 @@ type Drone struct {
 	status     string `db:"status"`
 	launchbase uint64 `db:"launch_base_id"`
 	CreatedAt  string `db:"created_at"`
+	LaunchBase LaunchBase
+	Missions   []Mission
 }
 
 const (
@@ -88,6 +96,9 @@ type MissionDrone struct {
 	assigned_by        uint64  `db:"assigned_by"`
 	assigned_at        string  `db:"assigned_at"`
 	planned_payload_kg float64 `db:"planned_payload_kg"`
+	Mission            Mission
+	Drone              Drone
+	AssignedBy         Operator
 }
 
 const (
