@@ -82,12 +82,12 @@ type Drone struct {
 const (
 	droneTableName = "drones"
 
-	DroneIDColumn        = "id"
-	DroneSerialColumn    = "serial"
-	DroneModelColumn     = "model"
-	DroneStatusColumn    = "status"
-	DroneLaunchBaseIDCol = "launch_base_id"
-	DroneCreatedAtColumn = "created_at"
+	DroneIDColumn           = "id"
+	DroneSerialColumn       = "serial"
+	DroneModelColumn        = "model"
+	DroneStatusColumn       = "status"
+	DroneLaunchBaseIDColumn = "launch_base_id"
+	DroneCreatedAtColumn    = "created_at"
 )
 
 type MissionDrone struct {

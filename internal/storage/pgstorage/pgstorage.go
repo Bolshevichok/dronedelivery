@@ -35,16 +35,59 @@ func NewPGStorge(connString string) (*PGstorage, error) {
 }
 
 func (s *PGstorage) initTables() error {
-	sql := fmt.Sprintf(`
-    CREATE TABLE IF NOT EXISTS %v (
-        %v SERIAL PRIMARY KEY,
-        %v VARCHAR(100) NOT NULL,
-        %v VARCHAR(255) UNIQUE NOT NULL,
-        %v INT
-    )`, tableName, IDСolumnName, NameСolumnName, EmailСolumnName, AgeСolumnName)
-	_, err := s.db.Exec(context.Background(), sql)
-	if err != nil {
-		return errors.Wrap(err, "initition tables")
+	queries := []string{
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			%s SERIAL PRIMARY KEY,
+			%s VARCHAR(255) UNIQUE NOT NULL,
+			%s VARCHAR(100) NOT NULL,
+			%s TIMESTAMP NOT NULL DEFAULT NOW()
+		)`, operatorTableName, OperatorIDColumn, OperatorEmailCol, OperatorNameCol, OperatorCreatedAtCol),
+
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			%s SERIAL PRIMARY KEY,
+			%s VARCHAR(100) NOT NULL,
+			%s FLOAT NOT NULL,
+			%s FLOAT NOT NULL,
+			%s FLOAT NOT NULL,
+			%s TIMESTAMP NOT NULL DEFAULT NOW()
+		)`, launchBaseTableName, LaunchBaseIDColumn, LaunchBaseNameColumn, LaunchBaseLatColumn, LaunchBaseLonColumn, LaunchBaseAltColumn, LaunchBaseCreatedAtColumn),
+
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			%s SERIAL PRIMARY KEY,
+			%s VARCHAR(100) UNIQUE NOT NULL,
+			%s VARCHAR(100) NOT NULL,
+			%s VARCHAR(50) NOT NULL,
+			%s BIGINT REFERENCES %s(%s),
+			%s TIMESTAMP NOT NULL DEFAULT NOW()
+		)`, droneTableName, DroneIDColumn, DroneSerialColumn, DroneModelColumn, DroneStatusColumn, DroneLaunchBaseIDColumn, launchBaseTableName, LaunchBaseIDColumn, DroneCreatedAtColumn),
+
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			%s SERIAL PRIMARY KEY,
+			%s BIGINT REFERENCES %s(%s),
+			%s BIGINT REFERENCES %s(%s),
+			%s VARCHAR(50) NOT NULL,
+			%s FLOAT NOT NULL,
+			%s FLOAT NOT NULL,
+			%s FLOAT NOT NULL,
+			%s FLOAT NOT NULL,
+			%s TIMESTAMP NOT NULL DEFAULT NOW()
+		)`, missionTableName, MissionIDColumn, MissionOperatorIDColumn, operatorTableName, OperatorIDColumn, MissionLaunchBaseIDColumn, launchBaseTableName, LaunchBaseIDColumn, MissionStatusColumn, MissionDestinationLatColumn, MissionDestinationLonColumn, MissionDestinationAltColumn, MissionPayloadKgColumn, MissionCreatedAtColumn),
+
+		fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			%s BIGINT REFERENCES %s(%s),
+			%s BIGINT REFERENCES %s(%s),
+			%s BIGINT REFERENCES %s(%s),
+			%s TIMESTAMP NOT NULL DEFAULT NOW(),
+			%s FLOAT NOT NULL,
+			PRIMARY KEY (%s, %s)
+		)`, missionDroneTableName, MissionDroneMissionIDColumn, missionTableName, MissionIDColumn, MissionDroneDroneIDColumn, droneTableName, DroneIDColumn, MissionDroneAssignedByColumn, operatorTableName, OperatorIDColumn, MissionDroneAssignedAtColumn, MissionDronePlannedPayloadKgColumn, MissionDroneMissionIDColumn, MissionDroneDroneIDColumn),
+	}
+
+	for _, sql := range queries {
+		_, err := s.db.Exec(context.Background(), sql)
+		if err != nil {
+			return errors.Wrap(err, "init tables error")
+		}
 	}
 	return nil
 }
