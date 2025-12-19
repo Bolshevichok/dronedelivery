@@ -26,10 +26,10 @@ func NewPGStorge(connString string) (*PGstorage, error) {
 	storage := &PGstorage{
 		db: db,
 	}
-	err = storage.initTables()
-	if err != nil {
-		return nil, err
-	}
+	// err = storage.initTables()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return storage, nil
 }

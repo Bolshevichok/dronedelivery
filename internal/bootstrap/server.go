@@ -8,10 +8,6 @@ import (
 	"net/http"
 	"os"
 
-	server "github.com/Domenick1991/students/internal/api/student_service_api"
-	studentsinfoupsertconsumer "github.com/Domenick1991/students/internal/consumer/students_Info_upsert_consumer"
-
-	"github.com/Domenick1991/students/internal/pb/students_api"
 	"github.com/go-chi/chi/v5"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -19,10 +15,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func AppRun(api server.StudentServiceAPI, studentInfoUpsertConsumer *studentsinfoupsertconsumer.StudentInfoUpsertConsumer) {
-	go studentInfoUpsertConsumer.Consume(context.Background())
+func AppRun() {
 	go func() {
-		if err := runGRPCServer(api); err != nil {
+		if err := runGRPCServer(); err != nil {
 			panic(fmt.Errorf("failed to run gRPC server: %v", err))
 		}
 	}()
@@ -32,14 +27,15 @@ func AppRun(api server.StudentServiceAPI, studentInfoUpsertConsumer *studentsinf
 	}
 }
 
-func runGRPCServer(api server.StudentServiceAPI) error {
+func runGRPCServer() error {
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		return err
 	}
 
 	s := grpc.NewServer()
-	students_api.RegisterStudentsServiceServer(s, &api)
+	// Register your services here, e.g., mission service
+	// students_api.RegisterStudentsServiceServer(s, &api)
 
 	slog.Info("gRPC-server server listening on :50051")
 	return s.Serve(lis)
@@ -67,10 +63,11 @@ func runGatewayServer() error {
 	mux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
-	err := students_api.RegisterStudentsServiceHandlerFromEndpoint(ctx, mux, ":50051", opts)
-	if err != nil {
-		panic(err)
-	}
+	// Register handlers here
+	// err := students_api.RegisterStudentsServiceHandlerFromEndpoint(ctx, mux, ":50051", opts)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	r.Mount("/", mux)
 

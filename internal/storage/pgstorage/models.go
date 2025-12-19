@@ -18,18 +18,18 @@ const (
 )
 
 type Mission struct {
-	ID              uint64  `db:"id"`
-	operator_id     uint64  `db:"operator_id"`
-	launch_base_id  uint64  `db:"launch_base_id"`
-	status          string  `db:"status"`
-	destination_lat float64 `db:"destination_lat"`
-	destination_lon float64 `db:"destination_lon"`
-	destination_alt float64 `db:"destination_alt"`
-	payload_kg      float64 `db:"payload"`
-	created_at      string  `db:"created_at"`
-	Operator        Operator
-	LaunchBase      LaunchBase
-	Drones          []Drone
+	ID             uint64  `db:"id"`
+	OperatorID     uint64  `db:"operator_id"`
+	LaunchBaseID   uint64  `db:"launch_base_id"`
+	Status         string  `db:"status"`
+	DestinationLat float64 `db:"destination_lat"`
+	DestinationLon float64 `db:"destination_lon"`
+	DestinationAlt float64 `db:"destination_alt"`
+	PayloadKg      float64 `db:"payload"`
+	CreatedAt      string  `db:"created_at"`
+	Operator       Operator
+	LaunchBase     LaunchBase
+	Drones         []Drone
 }
 
 const (
@@ -49,9 +49,9 @@ const (
 type LaunchBase struct {
 	ID        uint64  `db:"id"`
 	Name      string  `db:"name"`
-	lat       float64 `db:"lat"`
-	lon       float64 `db:"lon"`
-	alt       float64 `db:"alt"`
+	Lat       float64 `db:"lat"`
+	Lon       float64 `db:"lon"`
+	Alt       float64 `db:"alt"`
 	CreatedAt string  `db:"created_at"`
 	Missions  []Mission
 	Drones    []Drone
@@ -69,14 +69,14 @@ const (
 )
 
 type Drone struct {
-	ID         uint64 `db:"id"`
-	serial     string `db:"serial"`
-	model      string `db:"model"`
-	status     string `db:"status"`
-	launchbase uint64 `db:"launch_base_id"`
-	CreatedAt  string `db:"created_at"`
-	LaunchBase LaunchBase
-	Missions   []Mission
+	ID           uint64 `db:"id"`
+	Serial       string `db:"serial"`
+	Model        string `db:"model"`
+	Status       string `db:"status"`
+	LaunchBaseID uint64 `db:"launch_base_id"`
+	CreatedAt    string `db:"created_at"`
+	LaunchBase   LaunchBase
+	Missions     []Mission
 }
 
 const (
@@ -93,12 +93,12 @@ const (
 type MissionDrone struct {
 	MissionID          uint64  `db:"mission_id"`
 	DroneID            uint64  `db:"drone_id"`
-	assigned_by        uint64  `db:"assigned_by"`
-	assigned_at        string  `db:"assigned_at"`
-	planned_payload_kg float64 `db:"planned_payload_kg"`
+	AssignedBy         uint64  `db:"assigned_by"`
+	AssignedAt         string  `db:"assigned_at"`
+	PlannedPayloadKg   float64 `db:"planned_payload_kg"`
 	Mission            Mission
 	Drone              Drone
-	AssignedBy         Operator
+	AssignedByOperator Operator
 }
 
 const (

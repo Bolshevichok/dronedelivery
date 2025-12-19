@@ -1054,7 +1054,7 @@ const file_mission_v1_mission_proto_rawDesc = "" +
 	"GetMission\x12\x1d.mission.v1.GetMissionRequest\x1a\x1e.mission.v1.GetMissionResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/missions/{mission_id}\x12g\n" +
 	"\fListMissions\x12\x1f.mission.v1.ListMissionsRequest\x1a .mission.v1.ListMissionsResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/missions\x12\x93\x01\n" +
 	"\x13GetMissionTelemetry\x12&.mission.v1.GetMissionTelemetryRequest\x1a'.mission.v1.GetMissionTelemetryResponse\"+\x82\xd3\xe4\x93\x02%\x12#/v1/missions/{mission_id}/telemetry\x12u\n" +
-	"\fWatchMission\x12\x1f.mission.v1.WatchMissionRequest\x1a\x19.mission.v1.MissionUpdate\"'\x82\xd3\xe4\x93\x02!\x12\x1f/v1/missions/{mission_id}/watch0\x01B\x18Z\x16internal/pb/mission/v1b\x06proto3"
+	"\fWatchMission\x12\x1f.mission.v1.WatchMissionRequest\x1a\x19.mission.v1.MissionUpdate\"'\x82\xd3\xe4\x93\x02!\x12\x1f/v1/missions/{mission_id}/watch0\x01B>Z<github.com/Bolshevichok/dronedelivery/internal/pb/mission/v1b\x06proto3"
 
 var (
 	file_mission_v1_mission_proto_rawDescOnce sync.Once

@@ -16,6 +16,18 @@ protoc -I $apiDir `
   --go-grpc_out=$pbDir --go-grpc_opt=paths=source_relative `
   (Join-Path $apiDir "mission\v1\mission.proto")
 
+protoc -I $apiDir `
+  -I (Join-Path $apiDir "google\api") `
+  --go_out=$pbDir --go_opt=paths=source_relative `
+  --go-grpc_out=$pbDir --go-grpc_opt=paths=source_relative `
+  (Join-Path $apiDir "models\student_model.proto")
+
+protoc -I $apiDir `
+  -I (Join-Path $apiDir "google\api") `
+  --go_out=$pbDir --go_opt=paths=source_relative `
+  --go-grpc_out=$pbDir --go-grpc_opt=paths=source_relative `
+  (Join-Path $apiDir "students_api\students.proto")
+
 # Generate gRPC-Gateway
 protoc -I $apiDir `
   -I (Join-Path $apiDir "google\api") `

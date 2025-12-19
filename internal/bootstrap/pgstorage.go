@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Domenick1991/students/config"
-	"github.com/Domenick1991/students/internal/storage/pgstorage"
+	"github.com/Bolshevichok/dronedelivery/config"
+	"github.com/Bolshevichok/dronedelivery/internal/storage/pgstorage"
 )
 
 func InitPGStorage(cfg *config.Config) *pgstorage.PGstorage {
@@ -19,3 +19,4 @@ func InitPGStorage(cfg *config.Config) *pgstorage.PGstorage {
 	}
 	return storage
 }
+

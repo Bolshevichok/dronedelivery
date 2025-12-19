@@ -3,6 +3,7 @@ package pgstorage
 import (
 	"context"
 
+	"github.com/Bolshevichok/dronedelivery/internal/models"
 	"github.com/Masterminds/squirrel"
 	"github.com/pkg/errors"
 )
@@ -49,7 +50,7 @@ func (storage *PGstorage) GetLaunchBasesByIDs(ctx context.Context, IDs []uint64)
 	var launchBases []*LaunchBase
 	for rows.Next() {
 		var lb LaunchBase
-		if err := rows.Scan(&lb.ID, &lb.Name, &lb.lat, &lb.lon, &lb.alt, &lb.CreatedAt); err != nil {
+		if err := rows.Scan(&lb.ID, &lb.Name, &lb.Lat, &lb.Lon, &lb.Alt, &lb.CreatedAt); err != nil {
 			return nil, errors.Wrap(err, "failed to scan row")
 		}
 		launchBases = append(launchBases, &lb)
@@ -77,7 +78,7 @@ func (storage *PGstorage) GetDronesByIDs(ctx context.Context, IDs []uint64) ([]*
 	var drones []*Drone
 	for rows.Next() {
 		var d Drone
-		if err := rows.Scan(&d.ID, &d.serial, &d.model, &d.status, &d.launchbase, &d.CreatedAt); err != nil {
+		if err := rows.Scan(&d.ID, &d.Serial, &d.Model, &d.Status, &d.LaunchBaseID, &d.CreatedAt); err != nil {
 			return nil, errors.Wrap(err, "failed to scan row")
 		}
 		drones = append(drones, &d)
@@ -105,7 +106,7 @@ func (storage *PGstorage) GetMissionsByIDs(ctx context.Context, IDs []uint64) ([
 	var missions []*Mission
 	for rows.Next() {
 		var m Mission
-		if err := rows.Scan(&m.ID, &m.operator_id, &m.launch_base_id, &m.status, &m.destination_lat, &m.destination_lon, &m.destination_alt, &m.payload_kg, &m.created_at); err != nil {
+		if err := rows.Scan(&m.ID, &m.OperatorID, &m.LaunchBaseID, &m.Status, &m.DestinationLat, &m.DestinationLon, &m.DestinationAlt, &m.PayloadKg, &m.CreatedAt); err != nil {
 			return nil, errors.Wrap(err, "failed to scan row")
 		}
 		missions = append(missions, &m)
@@ -133,7 +134,7 @@ func (storage *PGstorage) GetMissionDronesByMissionIDs(ctx context.Context, miss
 	var missionDrones []*MissionDrone
 	for rows.Next() {
 		var md MissionDrone
-		if err := rows.Scan(&md.MissionID, &md.DroneID, &md.assigned_by, &md.assigned_at, &md.planned_payload_kg); err != nil {
+		if err := rows.Scan(&md.MissionID, &md.DroneID, &md.AssignedBy, &md.AssignedAt, &md.PlannedPayloadKg); err != nil {
 			return nil, errors.Wrap(err, "failed to scan row")
 		}
 		missionDrones = append(missionDrones, &md)
@@ -145,4 +146,10 @@ func (storage *PGstorage) getMissionDronesQuery(missionIDs []uint64) squirrel.Sq
 	q := squirrel.Select(MissionDroneMissionIDColumn, MissionDroneDroneIDColumn, MissionDroneAssignedByColumn, MissionDroneAssignedAtColumn, MissionDronePlannedPayloadKgColumn).From(missionDroneTableName).
 		Where(squirrel.Eq{MissionDroneMissionIDColumn: missionIDs}).PlaceholderFormat(squirrel.Dollar)
 	return q
+}
+
+// GetStudentInfoByIDs retrieves student info by IDs (legacy, for compatibility)
+func (storage *PGstorage) GetStudentInfoByIDs(ctx context.Context, IDs []uint64) ([]*models.StudentInfo, error) {
+	// Dummy implementation, return empty
+	return []*models.StudentInfo{}, nil
 }

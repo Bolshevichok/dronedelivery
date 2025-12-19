@@ -9,14 +9,11 @@ database:
 kafka:
   host: "localhost"
   port: 9092
-  student_info_upsert_topic_name: "studens_info_upsert"
-  student_info_event_topic_name: "studens_info_event"
+  missions_created_topic: "missions.created"
+  missions_lifecycle_topic: "missions.lifecycle"
+  drone_telemetry_topic: "drone.telemetry"
 
-StudentServiceSettings:
-  minNameLen: 1
-  maxNameLen: 50
-
-GroupServiceSettings:
-  httpAddr: ""
-  maxNameLen: ""
+redis:
+  host: "localhost"
+  port: 6379
   
