@@ -1,0 +1,11 @@
+# Build outputs
+/bin/
+
+# Windows binaries
+*.exe
+
+# OS / editor
+.vscode/
+
+# Local env/config overrides
+*.local.yaml
