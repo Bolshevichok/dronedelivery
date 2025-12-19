@@ -1,0 +1,130 @@
+syntax = "proto3";
+
+package mission.v1;
+
+import "google/api/annotations.proto";
+
+service MissionService {
+  rpc CreateMission(CreateMissionRequest) returns (CreateMissionResponse) {
+    option (google.api.http) = {
+      post: "/v1/missions"
+      body: "*"
+    };
+  }
+  rpc GetMission(GetMissionRequest) returns (GetMissionResponse) {
+    option (google.api.http) = {
+      get: "/v1/missions/{mission_id}"
+    };
+  }
+  rpc ListMissions(ListMissionsRequest) returns (ListMissionsResponse) {
+    option (google.api.http) = {
+      get: "/v1/missions"
+    };
+  }
+  rpc GetMissionTelemetry(GetMissionTelemetryRequest) returns (GetMissionTelemetryResponse) {
+    option (google.api.http) = {
+      get: "/v1/missions/{mission_id}/telemetry"
+    };
+  }
+  rpc WatchMission(WatchMissionRequest) returns (stream MissionUpdate) {
+    option (google.api.http) = {
+      get: "/v1/missions/{mission_id}/watch"
+    };
+  }
+}
+
+message CreateMissionRequest {
+  uint64 operator_id = 1;
+  uint64 launch_base_id = 2;
+  string status = 3;
+  double destination_lat = 4;
+  double destination_lon = 5;
+  double destination_alt = 6;
+  double payload_kg = 7;
+}
+
+message CreateMissionResponse {
+  uint64 mission_id = 1;
+}
+
+message GetMissionRequest {
+  uint64 mission_id = 1;
+}
+
+message GetMissionResponse {
+  Mission mission = 1;
+}
+
+message ListMissionsRequest {
+  // optional filters
+}
+
+message ListMissionsResponse {
+  repeated Mission missions = 1;
+}
+
+message GetMissionTelemetryRequest {
+  uint64 mission_id = 1;
+}
+
+message GetMissionTelemetryResponse {
+  Telemetry telemetry = 1;
+}
+
+message WatchMissionRequest {
+  uint64 mission_id = 1;
+}
+
+message MissionUpdate {
+  string status = 1;
+  Telemetry telemetry = 2;
+  string timestamp = 3;
+}
+
+message Mission {
+  uint64 id = 1;
+  uint64 operator_id = 2;
+  uint64 launch_base_id = 3;
+  string status = 4;
+  double destination_lat = 5;
+  double destination_lon = 6;
+  double destination_alt = 7;
+  double payload_kg = 8;
+  string created_at = 9;
+  Operator operator = 10;
+  LaunchBase launch_base = 11;
+  repeated Drone drones = 12;
+}
+
+message Operator {
+  uint64 id = 1;
+  string email = 2;
+  string name = 3;
+  string created_at = 4;
+}
+
+message LaunchBase {
+  uint64 id = 1;
+  string name = 2;
+  double lat = 3;
+  double lon = 4;
+  double alt = 5;
+  string created_at = 6;
+}
+
+message Drone {
+  uint64 id = 1;
+  string serial = 2;
+  string model = 3;
+  string status = 4;
+  uint64 launch_base_id = 5;
+  string created_at = 6;
+}
+
+message Telemetry {
+  uint64 drone_id = 1;
+  double lat = 2;
+  double lon = 3;
+  double alt = 4;
+  string timestamp = 5;
+}
