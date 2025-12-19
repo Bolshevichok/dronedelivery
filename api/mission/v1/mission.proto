@@ -4,6 +4,8 @@ package mission.v1;
 
 import "google/api/annotations.proto";
 
+option go_package = "internal/pb/mission/v1";
+
 service MissionService {
   rpc CreateMission(CreateMissionRequest) returns (CreateMissionResponse) {
     option (google.api.http) = {
