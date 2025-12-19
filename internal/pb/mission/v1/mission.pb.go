@@ -7,7 +7,6 @@
 package v1
 
 import (
-	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -967,7 +966,7 @@ var File_mission_v1_mission_proto protoreflect.FileDescriptor
 const file_mission_v1_mission_proto_rawDesc = "" +
 	"\n" +
 	"\x18mission/v1/mission.proto\x12\n" +
-	"mission.v1\x1a\x1cgoogle/api/annotations.proto\"\x8f\x02\n" +
+	"mission.v1\"\x8f\x02\n" +
 	"\x14CreateMissionRequest\x12\x1f\n" +
 	"\voperator_id\x18\x01 \x01(\x04R\n" +
 	"operatorId\x12$\n" +
@@ -1047,14 +1046,14 @@ const file_mission_v1_mission_proto_rawDesc = "" +
 	"\x03lat\x18\x02 \x01(\x01R\x03lat\x12\x10\n" +
 	"\x03lon\x18\x03 \x01(\x01R\x03lon\x12\x10\n" +
 	"\x03alt\x18\x04 \x01(\x01R\x03alt\x12\x1c\n" +
-	"\ttimestamp\x18\x05 \x01(\tR\ttimestamp2\xe5\x04\n" +
-	"\x0eMissionService\x12m\n" +
-	"\rCreateMission\x12 .mission.v1.CreateMissionRequest\x1a!.mission.v1.CreateMissionResponse\"\x17\x82\xd3\xe4\x93\x02\x11:\x01*\"\f/v1/missions\x12n\n" +
+	"\ttimestamp\x18\x05 \x01(\tR\ttimestamp2\xbc\x03\n" +
+	"\x0eMissionService\x12T\n" +
+	"\rCreateMission\x12 .mission.v1.CreateMissionRequest\x1a!.mission.v1.CreateMissionResponse\x12K\n" +
 	"\n" +
-	"GetMission\x12\x1d.mission.v1.GetMissionRequest\x1a\x1e.mission.v1.GetMissionResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/missions/{mission_id}\x12g\n" +
-	"\fListMissions\x12\x1f.mission.v1.ListMissionsRequest\x1a .mission.v1.ListMissionsResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/missions\x12\x93\x01\n" +
-	"\x13GetMissionTelemetry\x12&.mission.v1.GetMissionTelemetryRequest\x1a'.mission.v1.GetMissionTelemetryResponse\"+\x82\xd3\xe4\x93\x02%\x12#/v1/missions/{mission_id}/telemetry\x12u\n" +
-	"\fWatchMission\x12\x1f.mission.v1.WatchMissionRequest\x1a\x19.mission.v1.MissionUpdate\"'\x82\xd3\xe4\x93\x02!\x12\x1f/v1/missions/{mission_id}/watch0\x01B>Z<github.com/Bolshevichok/dronedelivery/internal/pb/mission/v1b\x06proto3"
+	"GetMission\x12\x1d.mission.v1.GetMissionRequest\x1a\x1e.mission.v1.GetMissionResponse\x12Q\n" +
+	"\fListMissions\x12\x1f.mission.v1.ListMissionsRequest\x1a .mission.v1.ListMissionsResponse\x12f\n" +
+	"\x13GetMissionTelemetry\x12&.mission.v1.GetMissionTelemetryRequest\x1a'.mission.v1.GetMissionTelemetryResponse\x12L\n" +
+	"\fWatchMission\x12\x1f.mission.v1.WatchMissionRequest\x1a\x19.mission.v1.MissionUpdate0\x01B>Z<github.com/Bolshevichok/dronedelivery/internal/pb/mission/v1b\x06proto3"
 
 var (
 	file_mission_v1_mission_proto_rawDescOnce sync.Once

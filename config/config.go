@@ -8,9 +8,10 @@ import (
 )
 
 type Config struct {
-	Database               DatabaseConfig         `yaml:"database"`
-	Kafka                  KafkaConfig            `yaml:"kafka"`
-	StudentServiceSettings StudentServiceSettings `yaml:"StudentServiceSettings"`
+	Database       DatabaseConfig       `yaml:"database"`
+	Kafka          KafkaConfig          `yaml:"kafka"`
+	Redis          RedisConfig          `yaml:"redis"`
+	MissionService MissionServiceConfig `yaml:"mission_service"`
 }
 
 type DatabaseConfig struct {
@@ -23,15 +24,21 @@ type DatabaseConfig struct {
 }
 
 type KafkaConfig struct {
-	Host                       string `yaml:"host"`
-	Port                       int    `yaml:"port"`
-	StudentInfoUpsertTopicName string `yaml:"student_info_upsert_topic_name"`
-	StudentInfoEventTopicName  string `yaml:"student_info_event_topic_name"`
+	Host                   string `yaml:"host"`
+	Port                   int    `yaml:"port"`
+	MissionsCreatedTopic   string `yaml:"missions_created_topic"`
+	MissionsLifecycleTopic string `yaml:"missions_lifecycle_topic"`
+	DroneTelemetryTopic    string `yaml:"drone_telemetry_topic"`
 }
 
-type StudentServiceSettings struct {
-	MinNameLen int `yaml:"minNameLen"`
-	MaxNameLen int `yaml:"maxNameLen"`
+type RedisConfig struct {
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
+}
+
+type MissionServiceConfig struct {
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
 }
 
 func LoadConfig(filename string) (*Config, error) {
@@ -48,4 +55,3 @@ func LoadConfig(filename string) (*Config, error) {
 
 	return &config, nil
 }
-

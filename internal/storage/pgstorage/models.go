@@ -1,10 +1,14 @@
 package pgstorage
 
+import (
+	"time"
+)
+
 type Operator struct {
-	ID        uint64 `db:"id"`
-	Email     string `db:"email"`
-	Name      string `db:"name"`
-	CreatedAt string `db:"created_at"`
+	ID        uint64    `db:"id"`
+	Email     string    `db:"email"`
+	Name      string    `db:"name"`
+	CreatedAt time.Time `db:"created_at"`
 	Missions  []Mission
 }
 
@@ -18,15 +22,15 @@ const (
 )
 
 type Mission struct {
-	ID             uint64  `db:"id"`
-	OperatorID     uint64  `db:"operator_id"`
-	LaunchBaseID   uint64  `db:"launch_base_id"`
-	Status         string  `db:"status"`
-	DestinationLat float64 `db:"destination_lat"`
-	DestinationLon float64 `db:"destination_lon"`
-	DestinationAlt float64 `db:"destination_alt"`
-	PayloadKg      float64 `db:"payload"`
-	CreatedAt      string  `db:"created_at"`
+	ID             uint64    `db:"id"`
+	OperatorID     uint64    `db:"operator_id"`
+	LaunchBaseID   uint64    `db:"launch_base_id"`
+	Status         string    `db:"status"`
+	DestinationLat float64   `db:"destination_lat"`
+	DestinationLon float64   `db:"destination_lon"`
+	DestinationAlt float64   `db:"destination_alt"`
+	PayloadKg      float64   `db:"payload"`
+	CreatedAt      time.Time `db:"created_at"`
 	Operator       Operator
 	LaunchBase     LaunchBase
 	Drones         []Drone
@@ -47,12 +51,12 @@ const (
 )
 
 type LaunchBase struct {
-	ID        uint64  `db:"id"`
-	Name      string  `db:"name"`
-	Lat       float64 `db:"lat"`
-	Lon       float64 `db:"lon"`
-	Alt       float64 `db:"alt"`
-	CreatedAt string  `db:"created_at"`
+	ID        uint64    `db:"id"`
+	Name      string    `db:"name"`
+	Lat       float64   `db:"lat"`
+	Lon       float64   `db:"lon"`
+	Alt       float64   `db:"alt"`
+	CreatedAt time.Time `db:"created_at"`
 	Missions  []Mission
 	Drones    []Drone
 }
@@ -69,12 +73,12 @@ const (
 )
 
 type Drone struct {
-	ID           uint64 `db:"id"`
-	Serial       string `db:"serial"`
-	Model        string `db:"model"`
-	Status       string `db:"status"`
-	LaunchBaseID uint64 `db:"launch_base_id"`
-	CreatedAt    string `db:"created_at"`
+	ID           uint64    `db:"id"`
+	Serial       string    `db:"serial"`
+	Model        string    `db:"model"`
+	Status       string    `db:"status"`
+	LaunchBaseID uint64    `db:"launch_base_id"`
+	CreatedAt    time.Time `db:"created_at"`
 	LaunchBase   LaunchBase
 	Missions     []Mission
 }
@@ -91,11 +95,11 @@ const (
 )
 
 type MissionDrone struct {
-	MissionID          uint64  `db:"mission_id"`
-	DroneID            uint64  `db:"drone_id"`
-	AssignedBy         uint64  `db:"assigned_by"`
-	AssignedAt         string  `db:"assigned_at"`
-	PlannedPayloadKg   float64 `db:"planned_payload_kg"`
+	MissionID          uint64    `db:"mission_id"`
+	DroneID            uint64    `db:"drone_id"`
+	AssignedBy         uint64    `db:"assigned_by"`
+	AssignedAt         time.Time `db:"assigned_at"`
+	PlannedPayloadKg   float64   `db:"planned_payload_kg"`
 	Mission            Mission
 	Drone              Drone
 	AssignedByOperator Operator

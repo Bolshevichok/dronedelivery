@@ -1,16 +1,5 @@
 package models
 
-// Domain models for API and business logic
-// Separate from storage models for security and isolation
-
-// Legacy model for students (to keep old code compiling)
-type StudentInfo struct {
-	ID    uint64
-	Name  string
-	Email string
-	Age   uint64
-}
-
 type Operator struct {
 	ID        uint64
 	Email     string

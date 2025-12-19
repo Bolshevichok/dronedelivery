@@ -2,37 +2,14 @@ syntax = "proto3";
 
 package mission.v1;
 
-import "google/api/annotations.proto";
-
 option go_package = "github.com/Bolshevichok/dronedelivery/internal/pb/mission/v1";
 
 service MissionService {
-  rpc CreateMission(CreateMissionRequest) returns (CreateMissionResponse) {
-    option (google.api.http) = {
-      post: "/v1/missions"
-      body: "*"
-    };
-  }
-  rpc GetMission(GetMissionRequest) returns (GetMissionResponse) {
-    option (google.api.http) = {
-      get: "/v1/missions/{mission_id}"
-    };
-  }
-  rpc ListMissions(ListMissionsRequest) returns (ListMissionsResponse) {
-    option (google.api.http) = {
-      get: "/v1/missions"
-    };
-  }
-  rpc GetMissionTelemetry(GetMissionTelemetryRequest) returns (GetMissionTelemetryResponse) {
-    option (google.api.http) = {
-      get: "/v1/missions/{mission_id}/telemetry"
-    };
-  }
-  rpc WatchMission(WatchMissionRequest) returns (stream MissionUpdate) {
-    option (google.api.http) = {
-      get: "/v1/missions/{mission_id}/watch"
-    };
-  }
+  rpc CreateMission(CreateMissionRequest) returns (CreateMissionResponse);
+  rpc GetMission(GetMissionRequest) returns (GetMissionResponse);
+  rpc ListMissions(ListMissionsRequest) returns (ListMissionsResponse);
+  rpc GetMissionTelemetry(GetMissionTelemetryRequest) returns (GetMissionTelemetryResponse);
+  rpc WatchMission(WatchMissionRequest) returns (stream MissionUpdate);
 }
 
 message CreateMissionRequest {

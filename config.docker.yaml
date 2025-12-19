@@ -1,0 +1,23 @@
+database:
+  host: "postgres"
+  port: 5432
+  username: "admin"
+  password: "admin"
+  name: "dronedelivery"
+  ssl_mode: "disable"
+
+kafka:
+  host: "kafka"
+  port: 9094
+  missions_created_topic: "missions.created"
+  missions_lifecycle_topic: "missions.lifecycle"
+  drone_telemetry_topic: "drone.telemetry"
+
+redis:
+  host: "redis"
+  port: 6379
+
+# CLI с хоста ходит на localhost:8080, контейнерам это поле не критично.
+mission_service:
+  host: "mission-service"
+  port: 8080

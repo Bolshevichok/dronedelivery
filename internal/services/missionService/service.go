@@ -2,18 +2,24 @@ package missionService
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"log/slog"
 	"time"
 
 	missionv1 "github.com/Bolshevichok/dronedelivery/internal/pb/mission/v1"
 	"github.com/Bolshevichok/dronedelivery/internal/storage/pgstorage"
+	"github.com/go-redis/redis/v8"
+	"github.com/segmentio/kafka-go"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 // Dependencies for the service
 type Dependencies struct {
-	Storage *pgstorage.PGstorage
-	// Add Kafka producer, etc.
+	Storage     *pgstorage.PGstorage
+	KafkaWriter *kafka.Writer // for missions.created
+	RedisClient *redis.Client
 }
 
 // MissionService implements the gRPC MissionServiceServer
@@ -31,17 +37,36 @@ func (s *MissionService) CreateMission(ctx context.Context, req *missionv1.Creat
 	mission := &pgstorage.Mission{
 		OperatorID:     req.OperatorId,
 		LaunchBaseID:   req.LaunchBaseId,
-		Status:         req.Status,
+		Status:         "created",
 		DestinationLat: req.DestinationLat,
 		DestinationLon: req.DestinationLon,
 		DestinationAlt: req.DestinationAlt,
 		PayloadKg:      req.PayloadKg,
-		CreatedAt:      time.Now().Format(time.RFC3339),
+		CreatedAt:      time.Now(),
 	}
 
-	// TODO: Implement UpsertMissions in pgstorage
-	// For now, assume ID is assigned
-	mission.ID = 1 // Placeholder
+	missions, err := s.deps.Storage.UpsertMissions(ctx, []*pgstorage.Mission{mission})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create mission: %v", err)
+	}
+	mission = missions[0]
+
+	// Отправляем событие о создании миссии (назначение дрона делает drone-service).
+	event := map[string]interface{}{
+		"event_id":   fmt.Sprintf("mission-created-%d", mission.ID),
+		"mission_id": mission.ID,
+		"base_id":    mission.LaunchBaseID,
+		"payload":    req,
+		"timestamp":  time.Now().Format(time.RFC3339),
+	}
+	eventBytes, _ := json.Marshal(event)
+	err = s.deps.KafkaWriter.WriteMessages(ctx, kafka.Message{
+		Key:   []byte(fmt.Sprintf("%d", mission.ID)),
+		Value: eventBytes,
+	})
+	if err != nil {
+		slog.Error("не удалось отправить missions.created", "mission_id", mission.ID, "err", err)
+	}
 
 	return &missionv1.CreateMissionResponse{MissionId: mission.ID}, nil
 }
@@ -57,7 +82,6 @@ func (s *MissionService) GetMission(ctx context.Context, req *missionv1.GetMissi
 	}
 
 	mission := missions[0]
-	// Convert to protobuf
 	pbMission := &missionv1.Mission{
 		Id:             mission.ID,
 		OperatorId:     mission.OperatorID,
@@ -67,8 +91,7 @@ func (s *MissionService) GetMission(ctx context.Context, req *missionv1.GetMissi
 		DestinationLon: mission.DestinationLon,
 		DestinationAlt: mission.DestinationAlt,
 		PayloadKg:      mission.PayloadKg,
-		CreatedAt:      mission.CreatedAt,
-		// TODO: Load related Operator, LaunchBase, Drones
+		CreatedAt:      mission.CreatedAt.Format(time.RFC3339),
 	}
 
 	return &missionv1.GetMissionResponse{Mission: pbMission}, nil
@@ -76,19 +99,86 @@ func (s *MissionService) GetMission(ctx context.Context, req *missionv1.GetMissi
 
 // ListMissions lists all missions (basic implementation)
 func (s *MissionService) ListMissions(ctx context.Context, req *missionv1.ListMissionsRequest) (*missionv1.ListMissionsResponse, error) {
-	// TODO: Implement proper listing with filters
-	// For now, return empty
+	// Пока не реализовано: CLI сейчас не использует.
 	return &missionv1.ListMissionsResponse{Missions: []*missionv1.Mission{}}, nil
 }
 
-// GetMissionTelemetry placeholder
+// GetMissionTelemetry retrieves the latest telemetry for a mission
 func (s *MissionService) GetMissionTelemetry(ctx context.Context, req *missionv1.GetMissionTelemetryRequest) (*missionv1.GetMissionTelemetryResponse, error) {
-	// TODO: Implement telemetry retrieval from Redis
-	return &missionv1.GetMissionTelemetryResponse{Telemetry: &missionv1.Telemetry{}}, nil
+	// Get mission drones
+	missionDrones, err := s.deps.Storage.GetMissionDronesByMissionIDs(ctx, []uint64{req.MissionId})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get mission drones: %v", err)
+	}
+	if len(missionDrones) == 0 {
+		return &missionv1.GetMissionTelemetryResponse{Telemetry: &missionv1.Telemetry{}}, nil
+	}
+	droneID := missionDrones[0].DroneID
+
+	// Get telemetry from Redis
+	key := fmt.Sprintf("telemetry:%d", droneID)
+	val, err := s.deps.RedisClient.Get(ctx, key).Result()
+	if err != nil {
+		return &missionv1.GetMissionTelemetryResponse{Telemetry: &missionv1.Telemetry{}}, nil
+	}
+
+	type telemetryDTO struct {
+		DroneID   uint64  `json:"drone_id"`
+		MissionID uint64  `json:"mission_id"`
+		Lat       float64 `json:"lat"`
+		Lon       float64 `json:"lon"`
+		Alt       float64 `json:"alt"`
+		Timestamp string  `json:"timestamp"`
+	}
+
+	var telemetry telemetryDTO
+	if err := json.Unmarshal([]byte(val), &telemetry); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to unmarshal telemetry: %v", err)
+	}
+
+	pbTelemetry := &missionv1.Telemetry{
+		DroneId:   telemetry.DroneID,
+		Lat:       telemetry.Lat,
+		Lon:       telemetry.Lon,
+		Alt:       telemetry.Alt,
+		Timestamp: telemetry.Timestamp,
+	}
+
+	return &missionv1.GetMissionTelemetryResponse{Telemetry: pbTelemetry}, nil
 }
 
-// WatchMission placeholder for streaming
+// WatchMission streams mission updates
 func (s *MissionService) WatchMission(req *missionv1.WatchMissionRequest, stream missionv1.MissionService_WatchMissionServer) error {
-	// TODO: Implement streaming updates
-	return nil
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-stream.Context().Done():
+			return nil
+		case <-ticker.C:
+			// Get mission status
+			missions, err := s.deps.Storage.GetMissionsByIDs(stream.Context(), []uint64{req.MissionId})
+			if err != nil || len(missions) == 0 {
+				continue
+			}
+			mission := missions[0]
+
+			// Get telemetry
+			telemetryResp, err := s.GetMissionTelemetry(stream.Context(), &missionv1.GetMissionTelemetryRequest{MissionId: req.MissionId})
+			if err != nil {
+				continue
+			}
+
+			update := &missionv1.MissionUpdate{
+				Status:    mission.Status,
+				Telemetry: telemetryResp.Telemetry,
+				Timestamp: time.Now().Format(time.RFC3339),
+			}
+
+			if err := stream.Send(update); err != nil {
+				return err
+			}
+		}
+	}
 }

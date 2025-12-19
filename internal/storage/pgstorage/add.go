@@ -3,7 +3,6 @@ package pgstorage
 import (
 	"context"
 
-	"github.com/Bolshevichok/dronedelivery/internal/models"
 	"github.com/Masterminds/squirrel"
 	"github.com/pkg/errors"
 )
@@ -74,17 +73,32 @@ func (storage *PGstorage) upsertDronesQuery(drones []*Drone) squirrel.Sqlizer {
 	return q
 }
 
-func (storage *PGstorage) UpsertMissions(ctx context.Context, missions []*Mission) error {
+func (storage *PGstorage) UpsertMissions(ctx context.Context, missions []*Mission) ([]*Mission, error) {
 	query := storage.upsertMissionsQuery(missions)
 	queryText, args, err := query.ToSql()
 	if err != nil {
-		return errors.Wrap(err, "generate query error")
+		return nil, errors.Wrap(err, "generate query error")
 	}
-	_, err = storage.db.Exec(ctx, queryText, args...)
+	rows, err := storage.db.Query(ctx, queryText, args...)
 	if err != nil {
-		return errors.Wrap(err, "exec query error")
+		return nil, errors.Wrap(err, "exec query error")
 	}
-	return err
+	defer rows.Close()
+
+	i := 0
+	for rows.Next() {
+		var id uint64
+		err := rows.Scan(&id)
+		if err != nil {
+			return nil, errors.Wrap(err, "scan id error")
+		}
+		missions[i].ID = id
+		i++
+	}
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "rows error")
+	}
+	return missions, nil
 }
 
 func (storage *PGstorage) upsertMissionsQuery(missions []*Mission) squirrel.Sqlizer {
@@ -93,6 +107,7 @@ func (storage *PGstorage) upsertMissionsQuery(missions []*Mission) squirrel.Sqli
 	for _, m := range missions {
 		q = q.Values(m.OperatorID, m.LaunchBaseID, m.Status, m.DestinationLat, m.DestinationLon, m.DestinationAlt, m.PayloadKg, m.CreatedAt)
 	}
+	q = q.Suffix("RETURNING id")
 	return q
 }
 
@@ -115,11 +130,19 @@ func (storage *PGstorage) upsertMissionDronesQuery(missionDrones []*MissionDrone
 	for _, md := range missionDrones {
 		q = q.Values(md.MissionID, md.DroneID, md.AssignedBy, md.AssignedAt, md.PlannedPayloadKg)
 	}
+	q = q.Suffix("ON CONFLICT (mission_id, drone_id) DO NOTHING")
 	return q
 }
 
-// UpsertStudentInfo upserts student info (legacy, for compatibility)
-func (storage *PGstorage) UpsertStudentInfo(ctx context.Context, studentInfos []*models.StudentInfo) error {
-	// Dummy implementation, do nothing
+func (storage *PGstorage) UpdateMissionStatus(ctx context.Context, missionID uint64, status string) error {
+	query := squirrel.Update(missionTableName).Set(MissionStatusColumn, status).Where(squirrel.Eq{MissionIDColumn: missionID}).PlaceholderFormat(squirrel.Dollar)
+	queryText, args, err := query.ToSql()
+	if err != nil {
+		return errors.Wrap(err, "generate query error")
+	}
+	_, err = storage.db.Exec(ctx, queryText, args...)
+	if err != nil {
+		return errors.Wrap(err, "exec query error")
+	}
 	return nil
 }

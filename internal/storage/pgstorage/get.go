@@ -3,7 +3,6 @@ package pgstorage
 import (
 	"context"
 
-	"github.com/Bolshevichok/dronedelivery/internal/models"
 	"github.com/Masterminds/squirrel"
 	"github.com/pkg/errors"
 )
@@ -142,14 +141,74 @@ func (storage *PGstorage) GetMissionDronesByMissionIDs(ctx context.Context, miss
 	return missionDrones, nil
 }
 
+func (storage *PGstorage) GetAvailableDrones(ctx context.Context, launchBaseID uint64) ([]*Drone, error) {
+	query := storage.getAvailableDronesQuery(launchBaseID)
+	queryText, args, err := query.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "generate query error")
+	}
+	rows, err := storage.db.Query(ctx, queryText, args...)
+	if err != nil {
+		return nil, errors.Wrap(err, "exec query error")
+	}
+	defer rows.Close()
+
+	var drones []*Drone
+	for rows.Next() {
+		var drone Drone
+		err := rows.Scan(&drone.ID, &drone.Serial, &drone.Model, &drone.Status, &drone.LaunchBaseID, &drone.CreatedAt)
+		if err != nil {
+			return nil, errors.Wrap(err, "scan drone error")
+		}
+		drones = append(drones, &drone)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "rows error")
+	}
+	return drones, nil
+}
+
+func (storage *PGstorage) getAvailableDronesQuery(launchBaseID uint64) squirrel.Sqlizer {
+	q := squirrel.Select(DroneIDColumn, DroneSerialColumn, DroneModelColumn, DroneStatusColumn, DroneLaunchBaseIDColumn, DroneCreatedAtColumn).From(droneTableName).
+		Where(squirrel.Eq{DroneStatusColumn: "available", DroneLaunchBaseIDColumn: launchBaseID}).PlaceholderFormat(squirrel.Dollar)
+	return q
+}
+
 func (storage *PGstorage) getMissionDronesQuery(missionIDs []uint64) squirrel.Sqlizer {
 	q := squirrel.Select(MissionDroneMissionIDColumn, MissionDroneDroneIDColumn, MissionDroneAssignedByColumn, MissionDroneAssignedAtColumn, MissionDronePlannedPayloadKgColumn).From(missionDroneTableName).
 		Where(squirrel.Eq{MissionDroneMissionIDColumn: missionIDs}).PlaceholderFormat(squirrel.Dollar)
 	return q
 }
 
-// GetStudentInfoByIDs retrieves student info by IDs (legacy, for compatibility)
-func (storage *PGstorage) GetStudentInfoByIDs(ctx context.Context, IDs []uint64) ([]*models.StudentInfo, error) {
-	// Dummy implementation, return empty
-	return []*models.StudentInfo{}, nil
+func (storage *PGstorage) GetMissionDronesByMissionID(ctx context.Context, missionID uint64) ([]*MissionDrone, error) {
+	query := storage.getMissionDronesByMissionIDQuery(missionID)
+	queryText, args, err := query.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "generate query error")
+	}
+	rows, err := storage.db.Query(ctx, queryText, args...)
+	if err != nil {
+		return nil, errors.Wrap(err, "exec query error")
+	}
+	defer rows.Close()
+
+	var missionDrones []*MissionDrone
+	for rows.Next() {
+		var md MissionDrone
+		err := rows.Scan(&md.MissionID, &md.DroneID, &md.AssignedBy, &md.AssignedAt, &md.PlannedPayloadKg)
+		if err != nil {
+			return nil, errors.Wrap(err, "scan mission drone error")
+		}
+		missionDrones = append(missionDrones, &md)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, errors.Wrap(err, "rows error")
+	}
+	return missionDrones, nil
+}
+
+func (storage *PGstorage) getMissionDronesByMissionIDQuery(missionID uint64) squirrel.Sqlizer {
+	q := squirrel.Select(MissionDroneMissionIDColumn, MissionDroneDroneIDColumn, MissionDroneAssignedByColumn, MissionDroneAssignedAtColumn, MissionDronePlannedPayloadKgColumn).From(missionDroneTableName).
+		Where(squirrel.Eq{MissionDroneMissionIDColumn: missionID}).PlaceholderFormat(squirrel.Dollar)
+	return q
 }
