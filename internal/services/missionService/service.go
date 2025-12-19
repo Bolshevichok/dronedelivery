@@ -147,7 +147,7 @@ func (s *MissionService) GetMissionTelemetry(ctx context.Context, req *missionv1
 	return &missionv1.GetMissionTelemetryResponse{Telemetry: pbTelemetry}, nil
 }
 
-// WatchMission streams mission updates
+// смотрит за обновлениями миссии и телеметрии
 func (s *MissionService) WatchMission(req *missionv1.WatchMissionRequest, stream missionv1.MissionService_WatchMissionServer) error {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
@@ -157,14 +157,14 @@ func (s *MissionService) WatchMission(req *missionv1.WatchMissionRequest, stream
 		case <-stream.Context().Done():
 			return nil
 		case <-ticker.C:
-			// Get mission status
+			// получаем миссию
 			missions, err := s.deps.Storage.GetMissionsByIDs(stream.Context(), []uint64{req.MissionId})
 			if err != nil || len(missions) == 0 {
 				continue
 			}
 			mission := missions[0]
 
-			// Get telemetry
+			// получаем телеметрию
 			telemetryResp, err := s.GetMissionTelemetry(stream.Context(), &missionv1.GetMissionTelemetryRequest{MissionId: req.MissionId})
 			if err != nil {
 				continue

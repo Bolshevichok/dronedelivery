@@ -26,7 +26,7 @@ func NewDroneService(storage *pgstorage.PGstorage, lifecycleWriter, telemetryWri
 }
 
 func (s *DroneService) ProcessMissionCreated(ctx context.Context, missionID uint64) {
-	// Get mission
+	// получаем миссию из БД
 	missions, err := s.storage.GetMissionsByIDs(ctx, []uint64{missionID})
 	if err != nil || len(missions) == 0 {
 		log.Printf("Failed to get mission %d: %v", missionID, err)
@@ -40,24 +40,24 @@ func (s *DroneService) ProcessMissionCreated(ctx context.Context, missionID uint
 		log.Printf("No available drones for mission %d", missionID)
 		return
 	}
-	drone := drones[0] // Для учебного стенда берём первый подходящий.
+	drone := drones[0] // берём первый
 
-	// Publish lifecycle assigned
+	// 	Назначаем дрон миссии.
 	s.publishLifecycle(ctx, missionID, drone.ID, "assigned", "")
 
-	// Start simulation
+	// 	Запускаем симуляцию миссии.
 	go s.simulateMission(ctx, missionID, drone.ID, mission)
 }
 
 func (s *DroneService) simulateMission(ctx context.Context, missionID, droneID uint64, mission *pgstorage.Mission) {
-	// Simulate flight
-	time.Sleep(5 * time.Second) // Picked up
+	// 	симулируем этапы миссии
+	time.Sleep(5 * time.Second)
 	s.publishLifecycle(ctx, missionID, droneID, "picked_up", "")
 
-	// Simulate telemetry during flight
+	// 	симулируем телеметрию во время полёта
 	go s.simulateTelemetry(ctx, missionID, droneID, mission.DestinationLat, mission.DestinationLon)
 
-	time.Sleep(10 * time.Second) // Delivered
+	time.Sleep(10 * time.Second)
 	s.publishLifecycle(ctx, missionID, droneID, "delivered", "")
 }
 
@@ -81,8 +81,8 @@ func (s *DroneService) publishLifecycle(ctx context.Context, missionID, droneID 
 }
 
 func (s *DroneService) simulateTelemetry(ctx context.Context, missionID, droneID uint64, destLat, destLon float64) {
-	// Simulate moving from base to destination
-	startLat, startLon := 55.7558, 37.6173 // Moscow base
+	// Симулируем движение дрона к цели
+	startLat, startLon := 55.7558, 37.6173
 	steps := 10
 	for i := 0; i < steps; i++ {
 		lat := startLat + (destLat-startLat)*float64(i)/float64(steps)
