@@ -8,3 +8,4 @@ to test:
 ```
 
 - Kafka topics: missions.created, missions.lifecycle, drone.telemetry
+![alt text](image.png)
