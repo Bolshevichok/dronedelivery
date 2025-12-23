@@ -24,13 +24,11 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Init Redis
 	rdb := redis.NewClient(&redis.Options{
 		Addr: fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
 	})
 	defer rdb.Close()
 
-	// Init consumer for drone.telemetry
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  []string{fmt.Sprintf("%s:%d", cfg.Kafka.Host, cfg.Kafka.Port)},
 		Topic:    cfg.Kafka.DroneTelemetryTopic,
@@ -57,7 +55,6 @@ func main() {
 		droneID := uint64(telemetry["drone_id"].(float64))
 		key := fmt.Sprintf("telemetry:%d", droneID)
 
-		// Храним последнюю телеметрию по дрону (TTL 1 час).
 		err = rdb.Set(context.Background(), key, string(m.Value), time.Hour).Err()
 		if err != nil {
 			log.Printf("Failed to store telemetry in Redis: %v", err)

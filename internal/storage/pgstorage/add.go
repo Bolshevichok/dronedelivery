@@ -3,11 +3,12 @@ package pgstorage
 import (
 	"context"
 
+	"github.com/Bolshevichok/dronedelivery/internal/models"
 	"github.com/Masterminds/squirrel"
 	"github.com/pkg/errors"
 )
 
-func (storage *PGstorage) UpsertOperators(ctx context.Context, operators []*Operator) error {
+func (storage *PGstorage) UpsertOperators(ctx context.Context, operators []*models.Operator) error {
 	query := storage.upsertOperatorsQuery(operators)
 	queryText, args, err := query.ToSql()
 	if err != nil {
@@ -20,7 +21,7 @@ func (storage *PGstorage) UpsertOperators(ctx context.Context, operators []*Oper
 	return err
 }
 
-func (storage *PGstorage) upsertOperatorsQuery(operators []*Operator) squirrel.Sqlizer {
+func (storage *PGstorage) upsertOperatorsQuery(operators []*models.Operator) squirrel.Sqlizer {
 	q := squirrel.Insert(operatorTableName).Columns(OperatorEmailCol, OperatorNameCol, OperatorCreatedAtCol).
 		PlaceholderFormat(squirrel.Dollar)
 	for _, op := range operators {
@@ -29,7 +30,7 @@ func (storage *PGstorage) upsertOperatorsQuery(operators []*Operator) squirrel.S
 	return q
 }
 
-func (storage *PGstorage) UpsertLaunchBases(ctx context.Context, launchBases []*LaunchBase) error {
+func (storage *PGstorage) UpsertLaunchBases(ctx context.Context, launchBases []*models.LaunchBase) error {
 	query := storage.upsertLaunchBasesQuery(launchBases)
 	queryText, args, err := query.ToSql()
 	if err != nil {
@@ -42,7 +43,7 @@ func (storage *PGstorage) UpsertLaunchBases(ctx context.Context, launchBases []*
 	return err
 }
 
-func (storage *PGstorage) upsertLaunchBasesQuery(launchBases []*LaunchBase) squirrel.Sqlizer {
+func (storage *PGstorage) upsertLaunchBasesQuery(launchBases []*models.LaunchBase) squirrel.Sqlizer {
 	q := squirrel.Insert(launchBaseTableName).Columns(LaunchBaseNameColumn, LaunchBaseLatColumn, LaunchBaseLonColumn, LaunchBaseAltColumn, LaunchBaseCreatedAtColumn).
 		PlaceholderFormat(squirrel.Dollar)
 	for _, lb := range launchBases {
@@ -51,7 +52,7 @@ func (storage *PGstorage) upsertLaunchBasesQuery(launchBases []*LaunchBase) squi
 	return q
 }
 
-func (storage *PGstorage) UpsertDrones(ctx context.Context, drones []*Drone) error {
+func (storage *PGstorage) UpsertDrones(ctx context.Context, drones []*models.Drone) error {
 	query := storage.upsertDronesQuery(drones)
 	queryText, args, err := query.ToSql()
 	if err != nil {
@@ -64,7 +65,7 @@ func (storage *PGstorage) UpsertDrones(ctx context.Context, drones []*Drone) err
 	return err
 }
 
-func (storage *PGstorage) upsertDronesQuery(drones []*Drone) squirrel.Sqlizer {
+func (storage *PGstorage) upsertDronesQuery(drones []*models.Drone) squirrel.Sqlizer {
 	q := squirrel.Insert(droneTableName).Columns(DroneSerialColumn, DroneModelColumn, DroneStatusColumn, DroneLaunchBaseIDColumn, DroneCreatedAtColumn).
 		PlaceholderFormat(squirrel.Dollar)
 	for _, d := range drones {
@@ -73,7 +74,7 @@ func (storage *PGstorage) upsertDronesQuery(drones []*Drone) squirrel.Sqlizer {
 	return q
 }
 
-func (storage *PGstorage) UpsertMissions(ctx context.Context, missions []*Mission) ([]*Mission, error) {
+func (storage *PGstorage) UpsertMissions(ctx context.Context, missions []*models.Mission) ([]*models.Mission, error) {
 	query := storage.upsertMissionsQuery(missions)
 	queryText, args, err := query.ToSql()
 	if err != nil {
@@ -101,7 +102,7 @@ func (storage *PGstorage) UpsertMissions(ctx context.Context, missions []*Missio
 	return missions, nil
 }
 
-func (storage *PGstorage) upsertMissionsQuery(missions []*Mission) squirrel.Sqlizer {
+func (storage *PGstorage) upsertMissionsQuery(missions []*models.Mission) squirrel.Sqlizer {
 	q := squirrel.Insert(missionTableName).Columns(MissionOperatorIDColumn, MissionLaunchBaseIDColumn, MissionStatusColumn, MissionDestinationLatColumn, MissionDestinationLonColumn, MissionDestinationAltColumn, MissionPayloadKgColumn, MissionCreatedAtColumn).
 		PlaceholderFormat(squirrel.Dollar)
 	for _, m := range missions {
@@ -111,7 +112,7 @@ func (storage *PGstorage) upsertMissionsQuery(missions []*Mission) squirrel.Sqli
 	return q
 }
 
-func (storage *PGstorage) UpsertMissionDrones(ctx context.Context, missionDrones []*MissionDrone) error {
+func (storage *PGstorage) UpsertMissionDrones(ctx context.Context, missionDrones []*models.MissionDrone) error {
 	query := storage.upsertMissionDronesQuery(missionDrones)
 	queryText, args, err := query.ToSql()
 	if err != nil {
@@ -124,7 +125,7 @@ func (storage *PGstorage) UpsertMissionDrones(ctx context.Context, missionDrones
 	return err
 }
 
-func (storage *PGstorage) upsertMissionDronesQuery(missionDrones []*MissionDrone) squirrel.Sqlizer {
+func (storage *PGstorage) upsertMissionDronesQuery(missionDrones []*models.MissionDrone) squirrel.Sqlizer {
 	q := squirrel.Insert(missionDroneTableName).Columns(MissionDroneMissionIDColumn, MissionDroneDroneIDColumn, MissionDroneAssignedByColumn, MissionDroneAssignedAtColumn, MissionDronePlannedPayloadKgColumn).
 		PlaceholderFormat(squirrel.Dollar)
 	for _, md := range missionDrones {

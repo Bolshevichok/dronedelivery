@@ -24,7 +24,6 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Init storage
 	connString := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Database.Host, cfg.Database.Port, cfg.Database.Username, cfg.Database.Password, cfg.Database.DBName, cfg.Database.SSLMode)
 	storage, err := pgstorage.NewPGStorge(connString)
@@ -32,7 +31,6 @@ func main() {
 		log.Fatalf("Failed to init storage: %v", err)
 	}
 
-	// Init Kafka writers
 	lifecycleWriter := &kafka.Writer{
 		Addr:     kafka.TCP(fmt.Sprintf("%s:%d", cfg.Kafka.Host, cfg.Kafka.Port)),
 		Topic:    cfg.Kafka.MissionsLifecycleTopic,
@@ -44,10 +42,8 @@ func main() {
 		Balancer: &kafka.LeastBytes{},
 	}
 
-	// Init service
 	droneSvc := droneService.NewDroneService(storage, lifecycleWriter, telemetryWriter)
 
-	// Init consumer for missions.created
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  []string{fmt.Sprintf("%s:%d", cfg.Kafka.Host, cfg.Kafka.Port)},
 		Topic:    cfg.Kafka.MissionsCreatedTopic,
@@ -74,7 +70,6 @@ func main() {
 		missionID := uint64(event["mission_id"].(float64))
 		log.Printf("Received mission created: %d", missionID)
 
-		// Process mission
 		go droneSvc.ProcessMissionCreated(context.Background(), missionID)
 	}
 }

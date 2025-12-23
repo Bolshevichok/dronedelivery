@@ -93,7 +93,6 @@ func (s *PGstorage) initTables() error {
 		}
 	}
 
-	// Seed data
 	seedQueries := []string{
 		`INSERT INTO operators (email, name) VALUES ('operator1@example.com', 'Operator One'), ('operator2@example.com', 'Operator Two') ON CONFLICT (email) DO NOTHING`,
 		`INSERT INTO launch_bases (name, lat, lon, alt) VALUES ('Base Alpha', 55.7558, 37.6173, 150.0), ('Base Beta', 59.9343, 30.3351, 50.0) ON CONFLICT DO NOTHING`,

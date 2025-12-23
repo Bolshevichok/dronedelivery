@@ -30,7 +30,6 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Initialize dependencies (DB, Kafka, etc.)
 	deps, err := bootstrap.InitMissionService(cfg)
 	if err != nil {
 		log.Fatalf("Failed to init dependencies: %v", err)
@@ -38,10 +37,8 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 
-	// Register gRPC server
 	missionv1.RegisterMissionServiceServer(grpcServer, missionService.NewMissionService(deps))
 
-	// Start consumer for missions.lifecycle
 	go func() {
 		r := kafka.NewReader(kafka.ReaderConfig{
 			Brokers:  []string{fmt.Sprintf("%s:%d", cfg.Kafka.Host, cfg.Kafka.Port)},
@@ -72,14 +69,12 @@ func main() {
 			status := event["status"].(string)
 			log.Printf("Updating mission %d status to %s by drone %d", missionID, status, droneID)
 
-			// Update mission status in DB
 			err = deps.Storage.UpdateMissionStatus(context.Background(), missionID, status)
 			if err != nil {
 				log.Printf("Failed to update mission status: %v", err)
 				continue
 			}
 
-			// If assigned, insert mission_drone
 			if status == "assigned" {
 				missions, err := deps.Storage.GetMissionsByIDs(context.Background(), []uint64{missionID})
 				if err != nil || len(missions) == 0 {
@@ -105,9 +100,8 @@ func main() {
 
 	reflection.Register(grpcServer)
 
-	// Start servers
 	go func() {
-		lis, err := net.Listen("tcp", ":8080") // gRPC port
+		lis, err := net.Listen("tcp", ":8080")
 		if err != nil {
 			log.Fatalf("Failed to listen: %v", err)
 		}

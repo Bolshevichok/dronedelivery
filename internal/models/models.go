@@ -1,10 +1,12 @@
 package models
 
+import "time"
+
 type Operator struct {
 	ID        uint64
 	Email     string
 	Name      string
-	CreatedAt string
+	CreatedAt time.Time
 	Missions  []Mission
 }
 
@@ -17,7 +19,7 @@ type Mission struct {
 	DestinationLon float64
 	DestinationAlt float64
 	PayloadKg      float64
-	CreatedAt      string
+	CreatedAt      time.Time
 	Operator       Operator
 	LaunchBase     LaunchBase
 	Drones         []Drone
@@ -29,7 +31,7 @@ type LaunchBase struct {
 	Lat       float64
 	Lon       float64
 	Alt       float64
-	CreatedAt string
+	CreatedAt time.Time
 	Missions  []Mission
 	Drones    []Drone
 }
@@ -40,7 +42,7 @@ type Drone struct {
 	Model        string
 	Status       string
 	LaunchBaseID uint64
-	CreatedAt    string
+	CreatedAt    time.Time
 	LaunchBase   LaunchBase
 	Missions     []Mission
 }

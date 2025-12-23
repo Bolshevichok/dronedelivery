@@ -26,7 +26,6 @@ func NewDroneService(storage *pgstorage.PGstorage, lifecycleWriter, telemetryWri
 }
 
 func (s *DroneService) ProcessMissionCreated(ctx context.Context, missionID uint64) {
-	// получаем миссию из БД
 	missions, err := s.storage.GetMissionsByIDs(ctx, []uint64{missionID})
 	if err != nil || len(missions) == 0 {
 		log.Printf("Failed to get mission %d: %v", missionID, err)
@@ -34,27 +33,22 @@ func (s *DroneService) ProcessMissionCreated(ctx context.Context, missionID uint
 	}
 	mission := missions[0]
 
-	// Берём любой доступный дрон на нужной базе.
 	drones, err := s.storage.GetAvailableDrones(ctx, mission.LaunchBaseID)
 	if err != nil || len(drones) == 0 {
 		log.Printf("No available drones for mission %d", missionID)
 		return
 	}
-	drone := drones[0] // берём первый
+	drone := drones[0]
 
-	// 	Назначаем дрон миссии.
 	s.publishLifecycle(ctx, missionID, drone.ID, "assigned", "")
 
-	// 	Запускаем симуляцию миссии.
 	go s.simulateMission(ctx, missionID, drone.ID, mission)
 }
 
 func (s *DroneService) simulateMission(ctx context.Context, missionID, droneID uint64, mission *pgstorage.Mission) {
-	// 	симулируем этапы миссии
 	time.Sleep(5 * time.Second)
 	s.publishLifecycle(ctx, missionID, droneID, "picked_up", "")
 
-	// 	симулируем телеметрию во время полёта
 	go s.simulateTelemetry(ctx, missionID, droneID, mission.DestinationLat, mission.DestinationLon)
 
 	time.Sleep(10 * time.Second)
@@ -81,7 +75,6 @@ func (s *DroneService) publishLifecycle(ctx context.Context, missionID, droneID 
 }
 
 func (s *DroneService) simulateTelemetry(ctx context.Context, missionID, droneID uint64, destLat, destLon float64) {
-	// Симулируем движение дрона к цели
 	startLat, startLon := 55.7558, 37.6173
 	steps := 10
 	for i := 0; i < steps; i++ {

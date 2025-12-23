@@ -3,11 +3,12 @@ package pgstorage
 import (
 	"context"
 
+	"github.com/Bolshevichok/dronedelivery/internal/models"
 	"github.com/Masterminds/squirrel"
 	"github.com/pkg/errors"
 )
 
-func (storage *PGstorage) GetOperatorsByIDs(ctx context.Context, IDs []uint64) ([]*Operator, error) {
+func (storage *PGstorage) GetOperatorsByIDs(ctx context.Context, IDs []uint64) ([]*models.Operator, error) {
 	query := storage.getOperatorsQuery(IDs)
 	queryText, args, err := query.ToSql()
 	if err != nil {
@@ -18,9 +19,9 @@ func (storage *PGstorage) GetOperatorsByIDs(ctx context.Context, IDs []uint64) (
 		return nil, errors.Wrap(err, "query error")
 	}
 	defer rows.Close()
-	var operators []*Operator
+	var operators []*models.Operator
 	for rows.Next() {
-		var op Operator
+		var op models.Operator
 		if err := rows.Scan(&op.ID, &op.Email, &op.Name, &op.CreatedAt); err != nil {
 			return nil, errors.Wrap(err, "failed to scan row")
 		}
@@ -35,7 +36,7 @@ func (storage *PGstorage) getOperatorsQuery(IDs []uint64) squirrel.Sqlizer {
 	return q
 }
 
-func (storage *PGstorage) GetLaunchBasesByIDs(ctx context.Context, IDs []uint64) ([]*LaunchBase, error) {
+func (storage *PGstorage) GetLaunchBasesByIDs(ctx context.Context, IDs []uint64) ([]*models.LaunchBase, error) {
 	query := storage.getLaunchBasesQuery(IDs)
 	queryText, args, err := query.ToSql()
 	if err != nil {
@@ -46,9 +47,9 @@ func (storage *PGstorage) GetLaunchBasesByIDs(ctx context.Context, IDs []uint64)
 		return nil, errors.Wrap(err, "query error")
 	}
 	defer rows.Close()
-	var launchBases []*LaunchBase
+	var launchBases []*models.LaunchBase
 	for rows.Next() {
-		var lb LaunchBase
+		var lb models.LaunchBase
 		if err := rows.Scan(&lb.ID, &lb.Name, &lb.Lat, &lb.Lon, &lb.Alt, &lb.CreatedAt); err != nil {
 			return nil, errors.Wrap(err, "failed to scan row")
 		}
@@ -63,7 +64,7 @@ func (storage *PGstorage) getLaunchBasesQuery(IDs []uint64) squirrel.Sqlizer {
 	return q
 }
 
-func (storage *PGstorage) GetDronesByIDs(ctx context.Context, IDs []uint64) ([]*Drone, error) {
+func (storage *PGstorage) GetDronesByIDs(ctx context.Context, IDs []uint64) ([]*models.Drone, error) {
 	query := storage.getDronesQuery(IDs)
 	queryText, args, err := query.ToSql()
 	if err != nil {
@@ -74,9 +75,9 @@ func (storage *PGstorage) GetDronesByIDs(ctx context.Context, IDs []uint64) ([]*
 		return nil, errors.Wrap(err, "query error")
 	}
 	defer rows.Close()
-	var drones []*Drone
+	var drones []*models.Drone
 	for rows.Next() {
-		var d Drone
+		var d models.Drone
 		if err := rows.Scan(&d.ID, &d.Serial, &d.Model, &d.Status, &d.LaunchBaseID, &d.CreatedAt); err != nil {
 			return nil, errors.Wrap(err, "failed to scan row")
 		}
@@ -91,7 +92,7 @@ func (storage *PGstorage) getDronesQuery(IDs []uint64) squirrel.Sqlizer {
 	return q
 }
 
-func (storage *PGstorage) GetMissionsByIDs(ctx context.Context, IDs []uint64) ([]*Mission, error) {
+func (storage *PGstorage) GetMissionsByIDs(ctx context.Context, IDs []uint64) ([]*models.Mission, error) {
 	query := storage.getMissionsQuery(IDs)
 	queryText, args, err := query.ToSql()
 	if err != nil {
@@ -102,9 +103,9 @@ func (storage *PGstorage) GetMissionsByIDs(ctx context.Context, IDs []uint64) ([
 		return nil, errors.Wrap(err, "query error")
 	}
 	defer rows.Close()
-	var missions []*Mission
+	var missions []*models.Mission
 	for rows.Next() {
-		var m Mission
+		var m models.Mission
 		if err := rows.Scan(&m.ID, &m.OperatorID, &m.LaunchBaseID, &m.Status, &m.DestinationLat, &m.DestinationLon, &m.DestinationAlt, &m.PayloadKg, &m.CreatedAt); err != nil {
 			return nil, errors.Wrap(err, "failed to scan row")
 		}
@@ -119,7 +120,7 @@ func (storage *PGstorage) getMissionsQuery(IDs []uint64) squirrel.Sqlizer {
 	return q
 }
 
-func (storage *PGstorage) GetMissionDronesByMissionIDs(ctx context.Context, missionIDs []uint64) ([]*MissionDrone, error) {
+func (storage *PGstorage) GetMissionDronesByMissionIDs(ctx context.Context, missionIDs []uint64) ([]*models.MissionDrone, error) {
 	query := storage.getMissionDronesQuery(missionIDs)
 	queryText, args, err := query.ToSql()
 	if err != nil {
@@ -141,7 +142,7 @@ func (storage *PGstorage) GetMissionDronesByMissionIDs(ctx context.Context, miss
 	return missionDrones, nil
 }
 
-func (storage *PGstorage) GetAvailableDrones(ctx context.Context, launchBaseID uint64) ([]*Drone, error) {
+func (storage *PGstorage) GetAvailableDrones(ctx context.Context, launchBaseID uint64) ([]*models.Drone, error) {
 	query := storage.getAvailableDronesQuery(launchBaseID)
 	queryText, args, err := query.ToSql()
 	if err != nil {
@@ -180,7 +181,7 @@ func (storage *PGstorage) getMissionDronesQuery(missionIDs []uint64) squirrel.Sq
 	return q
 }
 
-func (storage *PGstorage) GetMissionDronesByMissionID(ctx context.Context, missionID uint64) ([]*MissionDrone, error) {
+func (storage *PGstorage) GetMissionDronesByMissionID(ctx context.Context, missionID uint64) ([]*models.MissionDrone, error) {
 	query := storage.getMissionDronesByMissionIDQuery(missionID)
 	queryText, args, err := query.ToSql()
 	if err != nil {

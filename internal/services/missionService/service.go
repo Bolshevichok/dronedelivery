@@ -7,22 +7,21 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/Bolshevichok/dronedelivery/internal"
+	"github.com/Bolshevichok/dronedelivery/internal/models"
 	missionv1 "github.com/Bolshevichok/dronedelivery/internal/pb/mission/v1"
-	"github.com/Bolshevichok/dronedelivery/internal/storage/pgstorage"
 	"github.com/go-redis/redis/v8"
 	"github.com/segmentio/kafka-go"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-// Dependencies for the service
 type Dependencies struct {
-	Storage     *pgstorage.PGstorage
-	KafkaWriter *kafka.Writer // for missions.created
+	Storage     internal.Storage
+	KafkaWriter *kafka.Writer
 	RedisClient *redis.Client
 }
 
-// MissionService implements the gRPC MissionServiceServer
 type MissionService struct {
 	missionv1.UnimplementedMissionServiceServer
 	deps *Dependencies
@@ -32,9 +31,8 @@ func NewMissionService(deps *Dependencies) *MissionService {
 	return &MissionService{deps: deps}
 }
 
-// CreateMission creates a new mission
 func (s *MissionService) CreateMission(ctx context.Context, req *missionv1.CreateMissionRequest) (*missionv1.CreateMissionResponse, error) {
-	mission := &pgstorage.Mission{
+	mission := &models.Mission{
 		OperatorID:     req.OperatorId,
 		LaunchBaseID:   req.LaunchBaseId,
 		Status:         "created",
@@ -45,13 +43,12 @@ func (s *MissionService) CreateMission(ctx context.Context, req *missionv1.Creat
 		CreatedAt:      time.Now(),
 	}
 
-	missions, err := s.deps.Storage.UpsertMissions(ctx, []*pgstorage.Mission{mission})
+	missions, err := s.deps.Storage.UpsertMissions(ctx, []*models.Mission{mission})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create mission: %v", err)
 	}
 	mission = missions[0]
 
-	// Отправляем событие о создании миссии (назначение дрона делает drone-service).
 	event := map[string]interface{}{
 		"event_id":   fmt.Sprintf("mission-created-%d", mission.ID),
 		"mission_id": mission.ID,
@@ -71,7 +68,6 @@ func (s *MissionService) CreateMission(ctx context.Context, req *missionv1.Creat
 	return &missionv1.CreateMissionResponse{MissionId: mission.ID}, nil
 }
 
-// GetMission retrieves a mission by ID
 func (s *MissionService) GetMission(ctx context.Context, req *missionv1.GetMissionRequest) (*missionv1.GetMissionResponse, error) {
 	missions, err := s.deps.Storage.GetMissionsByIDs(ctx, []uint64{req.MissionId})
 	if err != nil {
@@ -97,15 +93,11 @@ func (s *MissionService) GetMission(ctx context.Context, req *missionv1.GetMissi
 	return &missionv1.GetMissionResponse{Mission: pbMission}, nil
 }
 
-// ListMissions lists all missions (basic implementation)
 func (s *MissionService) ListMissions(ctx context.Context, req *missionv1.ListMissionsRequest) (*missionv1.ListMissionsResponse, error) {
-	// Пока не реализовано: CLI сейчас не использует.
 	return &missionv1.ListMissionsResponse{Missions: []*missionv1.Mission{}}, nil
 }
 
-// GetMissionTelemetry retrieves the latest telemetry for a mission
 func (s *MissionService) GetMissionTelemetry(ctx context.Context, req *missionv1.GetMissionTelemetryRequest) (*missionv1.GetMissionTelemetryResponse, error) {
-	// Get mission drones
 	missionDrones, err := s.deps.Storage.GetMissionDronesByMissionIDs(ctx, []uint64{req.MissionId})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get mission drones: %v", err)
@@ -115,7 +107,6 @@ func (s *MissionService) GetMissionTelemetry(ctx context.Context, req *missionv1
 	}
 	droneID := missionDrones[0].DroneID
 
-	// Get telemetry from Redis
 	key := fmt.Sprintf("telemetry:%d", droneID)
 	val, err := s.deps.RedisClient.Get(ctx, key).Result()
 	if err != nil {
@@ -147,7 +138,6 @@ func (s *MissionService) GetMissionTelemetry(ctx context.Context, req *missionv1
 	return &missionv1.GetMissionTelemetryResponse{Telemetry: pbTelemetry}, nil
 }
 
-// смотрит за обновлениями миссии и телеметрии
 func (s *MissionService) WatchMission(req *missionv1.WatchMissionRequest, stream missionv1.MissionService_WatchMissionServer) error {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
@@ -157,14 +147,12 @@ func (s *MissionService) WatchMission(req *missionv1.WatchMissionRequest, stream
 		case <-stream.Context().Done():
 			return nil
 		case <-ticker.C:
-			// получаем миссию
 			missions, err := s.deps.Storage.GetMissionsByIDs(stream.Context(), []uint64{req.MissionId})
 			if err != nil || len(missions) == 0 {
 				continue
 			}
 			mission := missions[0]
 
-			// получаем телеметрию
 			telemetryResp, err := s.GetMissionTelemetry(stream.Context(), &missionv1.GetMissionTelemetryRequest{MissionId: req.MissionId})
 			if err != nil {
 				continue
