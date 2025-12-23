@@ -14,12 +14,8 @@ build-drone:
 build-telemetry:
 	go build -o bin/telemetry ./cmd/telemetry
 
-.PHONY: build-cli
-build-cli:
-	go build -o bin/cli ./cmd/cli
-
 .PHONY: build-all
-build-all: build-mission build-drone build-telemetry build-cli
+build-all: build-mission build-drone build-telemetry
 
 .PHONY: down
 down:
