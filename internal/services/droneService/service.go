@@ -49,7 +49,14 @@ func (s *DroneService) simulateMission(ctx context.Context, missionID, droneID u
 	time.Sleep(5 * time.Second)
 	s.publishLifecycle(ctx, missionID, droneID, "picked_up", "")
 
-	go s.simulateTelemetry(ctx, missionID, droneID, mission.DestinationLat, mission.DestinationLon)
+	launchBases, err := s.storage.GetLaunchBasesByIDs(ctx, []uint64{mission.LaunchBaseID})
+	if err != nil || len(launchBases) == 0 {
+		log.Printf("Failed to get launch base %d: %v", mission.LaunchBaseID, err)
+		return
+	}
+	launchBase := launchBases[0]
+
+	go s.simulateTelemetry(ctx, missionID, droneID, launchBase.Lat, launchBase.Lon, mission.DestinationLat, mission.DestinationLon)
 
 	time.Sleep(10 * time.Second)
 	s.publishLifecycle(ctx, missionID, droneID, "delivered", "")
@@ -74,8 +81,7 @@ func (s *DroneService) publishLifecycle(ctx context.Context, missionID, droneID 
 	}
 }
 
-func (s *DroneService) simulateTelemetry(ctx context.Context, missionID, droneID uint64, destLat, destLon float64) {
-	startLat, startLon := 55.7558, 37.6173
+func (s *DroneService) simulateTelemetry(ctx context.Context, missionID, droneID uint64, startLat, startLon, destLat, destLon float64) {
 	steps := 10
 	for i := 0; i < steps; i++ {
 		lat := startLat + (destLat-startLat)*float64(i)/float64(steps)

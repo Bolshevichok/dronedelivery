@@ -51,7 +51,7 @@ type MissionDrone struct {
 	MissionID          uint64
 	DroneID            uint64
 	AssignedBy         uint64
-	AssignedAt         string
+	AssignedAt         time.Time
 	PlannedPayloadKg   float64
 	Mission            Mission
 	Drone              Drone
