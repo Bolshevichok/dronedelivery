@@ -7,17 +7,18 @@ import (
 	"log"
 	"time"
 
-	"github.com/Bolshevichok/dronedelivery/internal/storage/pgstorage"
+	"github.com/Bolshevichok/dronedelivery/internal"
+	"github.com/Bolshevichok/dronedelivery/internal/models"
 	"github.com/segmentio/kafka-go"
 )
 
 type DroneService struct {
-	storage         *pgstorage.PGstorage
+	storage         internal.Storage
 	lifecycleWriter *kafka.Writer
 	telemetryWriter *kafka.Writer
 }
 
-func NewDroneService(storage *pgstorage.PGstorage, lifecycleWriter, telemetryWriter *kafka.Writer) *DroneService {
+func NewDroneService(storage internal.Storage, lifecycleWriter, telemetryWriter *kafka.Writer) *DroneService {
 	return &DroneService{
 		storage:         storage,
 		lifecycleWriter: lifecycleWriter,
@@ -45,7 +46,7 @@ func (s *DroneService) ProcessMissionCreated(ctx context.Context, missionID uint
 	go s.simulateMission(ctx, missionID, drone.ID, mission)
 }
 
-func (s *DroneService) simulateMission(ctx context.Context, missionID, droneID uint64, mission *pgstorage.Mission) {
+func (s *DroneService) simulateMission(ctx context.Context, missionID, droneID uint64, mission *models.Mission) {
 	time.Sleep(5 * time.Second)
 	s.publishLifecycle(ctx, missionID, droneID, "picked_up", "")
 
