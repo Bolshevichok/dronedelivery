@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/Bolshevichok/dronedelivery/config"
 	"github.com/Bolshevichok/dronedelivery/internal"
 	"github.com/Bolshevichok/dronedelivery/internal/models"
 	missionv1 "github.com/Bolshevichok/dronedelivery/internal/pb/mission/v1"
@@ -16,22 +17,47 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// MissionService interface
+type MissionService interface {
+	CreateMission(ctx context.Context, req *missionv1.CreateMissionRequest) (*missionv1.CreateMissionResponse, error)
+	GetMission(ctx context.Context, req *missionv1.GetMissionRequest) (*missionv1.GetMissionResponse, error)
+	ListMissions(ctx context.Context, req *missionv1.ListMissionsRequest) (*missionv1.ListMissionsResponse, error)
+	GetMissionTelemetry(ctx context.Context, req *missionv1.GetMissionTelemetryRequest) (*missionv1.GetMissionTelemetryResponse, error)
+	WatchMission(req *missionv1.WatchMissionRequest, stream missionv1.MissionService_WatchMissionServer) error
+}
+
 type Dependencies struct {
 	Storage     internal.Storage
 	KafkaWriter *kafka.Writer
 	RedisClient *redis.Client
 }
 
-type MissionService struct {
+type MissionServiceImpl struct {
 	missionv1.UnimplementedMissionServiceServer
 	deps *Dependencies
 }
 
-func NewMissionService(deps *Dependencies) *MissionService {
-	return &MissionService{deps: deps}
+func NewMissionService(ctx context.Context, storage internal.Storage, cfg *config.Config) MissionService {
+	createdWriter := &kafka.Writer{
+		Addr:     kafka.TCP(fmt.Sprintf("%s:%d", cfg.Kafka.Host, cfg.Kafka.Port)),
+		Topic:    cfg.Kafka.MissionsCreatedTopic,
+		Balancer: &kafka.LeastBytes{},
+	}
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
+	})
+
+	deps := &Dependencies{
+		Storage:     storage,
+		KafkaWriter: createdWriter,
+		RedisClient: redisClient,
+	}
+
+	return &MissionServiceImpl{deps: deps}
 }
 
-func (s *MissionService) CreateMission(ctx context.Context, req *missionv1.CreateMissionRequest) (*missionv1.CreateMissionResponse, error) {
+func (s *MissionServiceImpl) CreateMission(ctx context.Context, req *missionv1.CreateMissionRequest) (*missionv1.CreateMissionResponse, error) {
 	mission := &models.Mission{
 		OperatorID:     req.OperatorId,
 		LaunchBaseID:   req.LaunchBaseId,
@@ -68,7 +94,7 @@ func (s *MissionService) CreateMission(ctx context.Context, req *missionv1.Creat
 	return &missionv1.CreateMissionResponse{MissionId: mission.ID}, nil
 }
 
-func (s *MissionService) GetMission(ctx context.Context, req *missionv1.GetMissionRequest) (*missionv1.GetMissionResponse, error) {
+func (s *MissionServiceImpl) GetMission(ctx context.Context, req *missionv1.GetMissionRequest) (*missionv1.GetMissionResponse, error) {
 	missions, err := s.deps.Storage.GetMissionsByIDs(ctx, []uint64{req.MissionId})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get mission: %v", err)
@@ -93,11 +119,11 @@ func (s *MissionService) GetMission(ctx context.Context, req *missionv1.GetMissi
 	return &missionv1.GetMissionResponse{Mission: pbMission}, nil
 }
 
-func (s *MissionService) ListMissions(ctx context.Context, req *missionv1.ListMissionsRequest) (*missionv1.ListMissionsResponse, error) {
+func (s *MissionServiceImpl) ListMissions(ctx context.Context, req *missionv1.ListMissionsRequest) (*missionv1.ListMissionsResponse, error) {
 	return &missionv1.ListMissionsResponse{Missions: []*missionv1.Mission{}}, nil
 }
 
-func (s *MissionService) GetMissionTelemetry(ctx context.Context, req *missionv1.GetMissionTelemetryRequest) (*missionv1.GetMissionTelemetryResponse, error) {
+func (s *MissionServiceImpl) GetMissionTelemetry(ctx context.Context, req *missionv1.GetMissionTelemetryRequest) (*missionv1.GetMissionTelemetryResponse, error) {
 	missionDrones, err := s.deps.Storage.GetMissionDronesByMissionIDs(ctx, []uint64{req.MissionId})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get mission drones: %v", err)
@@ -138,7 +164,7 @@ func (s *MissionService) GetMissionTelemetry(ctx context.Context, req *missionv1
 	return &missionv1.GetMissionTelemetryResponse{Telemetry: pbTelemetry}, nil
 }
 
-func (s *MissionService) WatchMission(req *missionv1.WatchMissionRequest, stream missionv1.MissionService_WatchMissionServer) error {
+func (s *MissionServiceImpl) WatchMission(req *missionv1.WatchMissionRequest, stream missionv1.MissionService_WatchMissionServer) error {
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 

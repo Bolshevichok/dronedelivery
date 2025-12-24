@@ -7,26 +7,43 @@ import (
 	"log"
 	"time"
 
+	"github.com/Bolshevichok/dronedelivery/config"
 	"github.com/Bolshevichok/dronedelivery/internal"
 	"github.com/Bolshevichok/dronedelivery/internal/models"
 	"github.com/segmentio/kafka-go"
 )
 
-type DroneService struct {
+// DroneService interface
+type DroneService interface {
+	ProcessMissionCreated(ctx context.Context, missionID uint64)
+}
+
+type DroneServiceImpl struct {
 	storage         internal.Storage
 	lifecycleWriter *kafka.Writer
 	telemetryWriter *kafka.Writer
 }
 
-func NewDroneService(storage internal.Storage, lifecycleWriter, telemetryWriter *kafka.Writer) *DroneService {
-	return &DroneService{
+func NewDroneService(storage internal.Storage, cfg *config.Config) DroneService {
+	lifecycleWriter := &kafka.Writer{
+		Addr:     kafka.TCP(fmt.Sprintf("%s:%d", cfg.Kafka.Host, cfg.Kafka.Port)),
+		Topic:    cfg.Kafka.DroneLifecycleTopic,
+		Balancer: &kafka.LeastBytes{},
+	}
+	telemetryWriter := &kafka.Writer{
+		Addr:     kafka.TCP(fmt.Sprintf("%s:%d", cfg.Kafka.Host, cfg.Kafka.Port)),
+		Topic:    cfg.Kafka.DroneTelemetryTopic,
+		Balancer: &kafka.LeastBytes{},
+	}
+
+	return &DroneServiceImpl{
 		storage:         storage,
 		lifecycleWriter: lifecycleWriter,
 		telemetryWriter: telemetryWriter,
 	}
 }
 
-func (s *DroneService) ProcessMissionCreated(ctx context.Context, missionID uint64) {
+func (s *DroneServiceImpl) ProcessMissionCreated(ctx context.Context, missionID uint64) {
 	missions, err := s.storage.GetMissionsByIDs(ctx, []uint64{missionID})
 	if err != nil || len(missions) == 0 {
 		log.Printf("Failed to get mission %d: %v", missionID, err)
@@ -46,7 +63,7 @@ func (s *DroneService) ProcessMissionCreated(ctx context.Context, missionID uint
 	go s.simulateMission(ctx, missionID, drone.ID, mission)
 }
 
-func (s *DroneService) simulateMission(ctx context.Context, missionID, droneID uint64, mission *models.Mission) {
+func (s *DroneServiceImpl) simulateMission(ctx context.Context, missionID, droneID uint64, mission *models.Mission) {
 	time.Sleep(5 * time.Second)
 	s.publishLifecycle(ctx, missionID, droneID, "picked_up", "")
 
@@ -63,7 +80,7 @@ func (s *DroneService) simulateMission(ctx context.Context, missionID, droneID u
 	s.publishLifecycle(ctx, missionID, droneID, "delivered", "")
 }
 
-func (s *DroneService) publishLifecycle(ctx context.Context, missionID, droneID uint64, status, details string) {
+func (s *DroneServiceImpl) publishLifecycle(ctx context.Context, missionID, droneID uint64, status, details string) {
 	event := map[string]interface{}{
 		"event_id":   fmt.Sprintf("event-%d-%s", missionID, status),
 		"mission_id": missionID,
@@ -82,7 +99,7 @@ func (s *DroneService) publishLifecycle(ctx context.Context, missionID, droneID 
 	}
 }
 
-func (s *DroneService) simulateTelemetry(ctx context.Context, missionID, droneID uint64, startLat, startLon, destLat, destLon float64) {
+func (s *DroneServiceImpl) simulateTelemetry(ctx context.Context, missionID, droneID uint64, startLat, startLon, destLat, destLon float64) {
 	steps := 10
 	for i := 0; i < steps; i++ {
 		lat := startLat + (destLat-startLat)*float64(i)/float64(steps)

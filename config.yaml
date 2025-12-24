@@ -11,6 +11,7 @@ kafka:
   port: 9092
   missions_created_topic: "missions.created"
   missions_lifecycle_topic: "missions.lifecycle"
+  drone_lifecycle_topic: "drone.lifecycle"
   drone_telemetry_topic: "drone.telemetry"
 
 redis:

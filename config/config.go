@@ -28,6 +28,7 @@ type KafkaConfig struct {
 	Port                   int    `yaml:"port"`
 	MissionsCreatedTopic   string `yaml:"missions_created_topic"`
 	MissionsLifecycleTopic string `yaml:"missions_lifecycle_topic"`
+	DroneLifecycleTopic    string `yaml:"drone_lifecycle_topic"`
 	DroneTelemetryTopic    string `yaml:"drone_telemetry_topic"`
 }
 

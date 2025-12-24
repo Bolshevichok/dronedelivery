@@ -9,7 +9,6 @@ import (
 )
 
 func InitPGStorage(cfg *config.Config) *pgstorage.PGstorage {
-
 	connectionString := fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
 		cfg.Database.Username, cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.DBName)
 	storage, err := pgstorage.NewPGStorge(connectionString)
@@ -19,4 +18,3 @@ func InitPGStorage(cfg *config.Config) *pgstorage.PGstorage {
 	}
 	return storage
 }
-

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Bolshevichok/dronedelivery/config"
 	"github.com/Bolshevichok/dronedelivery/internal/mocks"
 	"github.com/Bolshevichok/dronedelivery/internal/models"
 	missionv1 "github.com/Bolshevichok/dronedelivery/internal/pb/mission/v1"
@@ -20,7 +21,7 @@ type MissionServiceTestSuite struct {
 	mockStorage     *mocks.Storage
 	mockKafkaWriter *kafka.Writer
 	mockRedisClient *redis.Client
-	service         *MissionService
+	service         MissionService
 }
 
 func (suite *MissionServiceTestSuite) SetupTest() {
@@ -28,13 +29,19 @@ func (suite *MissionServiceTestSuite) SetupTest() {
 	suite.mockKafkaWriter = &kafka.Writer{}
 	suite.mockRedisClient = &redis.Client{}
 
-	deps := &Dependencies{
-		Storage:     suite.mockStorage,
-		KafkaWriter: suite.mockKafkaWriter,
-		RedisClient: suite.mockRedisClient,
+	cfg := &config.Config{
+		Kafka: config.KafkaConfig{
+			Host:                 "localhost",
+			Port:                 9092,
+			MissionsCreatedTopic: "missions.created",
+		},
+		Redis: config.RedisConfig{
+			Host: "localhost",
+			Port: 6379,
+		},
 	}
 
-	suite.service = NewMissionService(deps)
+	suite.service = NewMissionService(context.Background(), suite.mockStorage, cfg)
 }
 
 func (suite *MissionServiceTestSuite) TearDownTest() {
