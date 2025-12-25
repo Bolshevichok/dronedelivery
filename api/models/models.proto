@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package models;
+
+option go_package = "github.com/Bolshevichok/dronedelivery/internal/pb/models";
+
+message Mission {
+  uint64 id = 1;
+  uint64 op_id = 2;
+  uint64 base_id = 3;
+  string status = 4;
+  double lat = 5;
+  double lon = 6;
+  double alt = 7;
+  double payload = 8;
+  string created_at = 9;
+  Operator operator = 10;
+  LaunchBase base = 11;
+  repeated Drone drones = 12;
+}
+
+message Operator {
+  uint64 id = 1;
+  string email = 2;
+  string name = 3;
+  string created_at = 4;
+}
+
+message LaunchBase {
+  uint64 id = 1;
+  string name = 2;
+  double lat = 3;
+  double lon = 4;
+  double alt = 5;
+  string created_at = 6;
+}
+
+message Drone {
+  uint64 id = 1;
+  string serial = 2;
+  string model = 3;
+  string status = 4;
+  uint64 base_id = 5;
+  string created_at = 6;
+}
+
+message Telemetry {
+  uint64 drone_id = 1;
+  double lat = 2;
+  double lon = 3;
+  double alt = 4;
+  string timestamp = 5;
+}

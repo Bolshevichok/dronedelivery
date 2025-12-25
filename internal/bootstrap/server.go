@@ -8,7 +8,7 @@ import (
 	"github.com/Bolshevichok/dronedelivery/internal/api/mission_api"
 	"github.com/Bolshevichok/dronedelivery/internal/consumer/mission_created_consumer"
 	"github.com/Bolshevichok/dronedelivery/internal/consumer/telemetry_consumer"
-	missionv1 "github.com/Bolshevichok/dronedelivery/internal/pb/mission/v1"
+	pb_mission_api "github.com/Bolshevichok/dronedelivery/internal/pb/mission_api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -17,7 +17,7 @@ func AppRun(api *mission_api.MissionAPI, consumer *mission_created_consumer.Miss
 	go consumer.Start(context.Background())
 
 	grpcServer := grpc.NewServer()
-	missionv1.RegisterMissionServiceServer(grpcServer, api)
+	pb_mission_api.RegisterMissionServiceServer(grpcServer, api)
 	reflection.Register(grpcServer)
 
 	lis, err := net.Listen("tcp", ":8080")

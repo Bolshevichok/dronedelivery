@@ -10,7 +10,8 @@ import (
 	"github.com/Bolshevichok/dronedelivery/config"
 	"github.com/Bolshevichok/dronedelivery/internal"
 	"github.com/Bolshevichok/dronedelivery/internal/models"
-	missionv1 "github.com/Bolshevichok/dronedelivery/internal/pb/mission/v1"
+	mission_api "github.com/Bolshevichok/dronedelivery/internal/pb/mission_api"
+	models_pb "github.com/Bolshevichok/dronedelivery/internal/pb/models"
 	"github.com/go-redis/redis/v8"
 	"github.com/segmentio/kafka-go"
 	"google.golang.org/grpc/codes"
@@ -19,11 +20,8 @@ import (
 
 // MissionService interface
 type MissionService interface {
-	CreateMission(ctx context.Context, req *missionv1.CreateMissionRequest) (*missionv1.CreateMissionResponse, error)
-	GetMission(ctx context.Context, req *missionv1.GetMissionRequest) (*missionv1.GetMissionResponse, error)
-	ListMissions(ctx context.Context, req *missionv1.ListMissionsRequest) (*missionv1.ListMissionsResponse, error)
-	GetMissionTelemetry(ctx context.Context, req *missionv1.GetMissionTelemetryRequest) (*missionv1.GetMissionTelemetryResponse, error)
-	WatchMission(req *missionv1.WatchMissionRequest, stream missionv1.MissionService_WatchMissionServer) error
+	UpsertMissions(ctx context.Context, req *mission_api.UpsertMissionsRequest) (*mission_api.UpsertMissionsResponse, error)
+	GetMission(ctx context.Context, req *mission_api.GetMissionRequest) (*mission_api.GetMissionResponse, error)
 }
 
 type Dependencies struct {
@@ -33,7 +31,7 @@ type Dependencies struct {
 }
 
 type MissionServiceImpl struct {
-	missionv1.UnimplementedMissionServiceServer
+	mission_api.UnimplementedMissionServiceServer
 	deps *Dependencies
 }
 
@@ -57,44 +55,46 @@ func NewMissionService(ctx context.Context, storage internal.Storage, cfg *confi
 	return &MissionServiceImpl{deps: deps}
 }
 
-func (s *MissionServiceImpl) CreateMission(ctx context.Context, req *missionv1.CreateMissionRequest) (*missionv1.CreateMissionResponse, error) {
-	mission := &models.Mission{
-		OperatorID:     req.OperatorId,
-		LaunchBaseID:   req.LaunchBaseId,
-		Status:         "created",
-		DestinationLat: req.DestinationLat,
-		DestinationLon: req.DestinationLon,
-		DestinationAlt: req.DestinationAlt,
-		PayloadKg:      req.PayloadKg,
-		CreatedAt:      time.Now(),
+func (s *MissionServiceImpl) UpsertMissions(ctx context.Context, req *mission_api.UpsertMissionsRequest) (*mission_api.UpsertMissionsResponse, error) {
+	for _, missionPb := range req.Missions {
+		mission := &models.Mission{
+			OperatorID:     missionPb.OpId,
+			LaunchBaseID:   missionPb.BaseId,
+			Status:         missionPb.Status,
+			DestinationLat: missionPb.Lat,
+			DestinationLon: missionPb.Lon,
+			DestinationAlt: missionPb.Alt,
+			PayloadKg:      missionPb.Payload,
+			CreatedAt:      time.Now(),
+		}
+
+		missions, err := s.deps.Storage.UpsertMissions(ctx, []*models.Mission{mission})
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to upsert mission: %v", err)
+		}
+		mission = missions[0]
+
+		event := map[string]interface{}{
+			"event_id":   fmt.Sprintf("mission-created-%d", mission.ID),
+			"mission_id": mission.ID,
+			"base_id":    mission.LaunchBaseID,
+			"payload":    missionPb,
+			"timestamp":  time.Now().Format(time.RFC3339),
+		}
+		eventBytes, _ := json.Marshal(event)
+		err = s.deps.KafkaWriter.WriteMessages(ctx, kafka.Message{
+			Key:   []byte(fmt.Sprintf("%d", mission.ID)),
+			Value: eventBytes,
+		})
+		if err != nil {
+			slog.Error("не удалось отправить missions.created", "mission_id", mission.ID, "err", err)
+		}
 	}
 
-	missions, err := s.deps.Storage.UpsertMissions(ctx, []*models.Mission{mission})
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create mission: %v", err)
-	}
-	mission = missions[0]
-
-	event := map[string]interface{}{
-		"event_id":   fmt.Sprintf("mission-created-%d", mission.ID),
-		"mission_id": mission.ID,
-		"base_id":    mission.LaunchBaseID,
-		"payload":    req,
-		"timestamp":  time.Now().Format(time.RFC3339),
-	}
-	eventBytes, _ := json.Marshal(event)
-	err = s.deps.KafkaWriter.WriteMessages(ctx, kafka.Message{
-		Key:   []byte(fmt.Sprintf("%d", mission.ID)),
-		Value: eventBytes,
-	})
-	if err != nil {
-		slog.Error("не удалось отправить missions.created", "mission_id", mission.ID, "err", err)
-	}
-
-	return &missionv1.CreateMissionResponse{MissionId: mission.ID}, nil
+	return &mission_api.UpsertMissionsResponse{}, nil
 }
 
-func (s *MissionServiceImpl) GetMission(ctx context.Context, req *missionv1.GetMissionRequest) (*missionv1.GetMissionResponse, error) {
+func (s *MissionServiceImpl) GetMission(ctx context.Context, req *mission_api.GetMissionRequest) (*mission_api.GetMissionResponse, error) {
 	missions, err := s.deps.Storage.GetMissionsByIDs(ctx, []uint64{req.MissionId})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get mission: %v", err)
@@ -104,95 +104,20 @@ func (s *MissionServiceImpl) GetMission(ctx context.Context, req *missionv1.GetM
 	}
 
 	mission := missions[0]
-	pbMission := &missionv1.Mission{
-		Id:             mission.ID,
-		OperatorId:     mission.OperatorID,
-		LaunchBaseId:   mission.LaunchBaseID,
-		Status:         mission.Status,
-		DestinationLat: mission.DestinationLat,
-		DestinationLon: mission.DestinationLon,
-		DestinationAlt: mission.DestinationAlt,
-		PayloadKg:      mission.PayloadKg,
-		CreatedAt:      mission.CreatedAt.Format(time.RFC3339),
+	pbMission := &models_pb.Mission{
+		Id:        mission.ID,
+		OpId:      mission.OperatorID,
+		BaseId:    mission.LaunchBaseID,
+		Status:    mission.Status,
+		Lat:       mission.DestinationLat,
+		Lon:       mission.DestinationLon,
+		Alt:       mission.DestinationAlt,
+		Payload:   mission.PayloadKg,
+		CreatedAt: mission.CreatedAt.Format(time.RFC3339),
+		Operator:  &models_pb.Operator{Id: mission.Operator.ID, Email: mission.Operator.Email, Name: mission.Operator.Name, CreatedAt: mission.Operator.CreatedAt.Format(time.RFC3339)},
+		Base:      &models_pb.LaunchBase{Id: mission.LaunchBase.ID, Name: mission.LaunchBase.Name, Lat: mission.LaunchBase.Lat, Lon: mission.LaunchBase.Lon, Alt: mission.LaunchBase.Alt, CreatedAt: mission.LaunchBase.CreatedAt.Format(time.RFC3339)},
+		Drones:    []*models_pb.Drone{},
 	}
 
-	return &missionv1.GetMissionResponse{Mission: pbMission}, nil
-}
-
-func (s *MissionServiceImpl) ListMissions(ctx context.Context, req *missionv1.ListMissionsRequest) (*missionv1.ListMissionsResponse, error) {
-	return &missionv1.ListMissionsResponse{Missions: []*missionv1.Mission{}}, nil
-}
-
-func (s *MissionServiceImpl) GetMissionTelemetry(ctx context.Context, req *missionv1.GetMissionTelemetryRequest) (*missionv1.GetMissionTelemetryResponse, error) {
-	missionDrones, err := s.deps.Storage.GetMissionDronesByMissionIDs(ctx, []uint64{req.MissionId})
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get mission drones: %v", err)
-	}
-	if len(missionDrones) == 0 {
-		return &missionv1.GetMissionTelemetryResponse{Telemetry: &missionv1.Telemetry{}}, nil
-	}
-	droneID := missionDrones[0].DroneID
-
-	key := fmt.Sprintf("telemetry:%d", droneID)
-	val, err := s.deps.RedisClient.Get(ctx, key).Result()
-	if err != nil {
-		return &missionv1.GetMissionTelemetryResponse{Telemetry: &missionv1.Telemetry{}}, nil
-	}
-
-	type telemetryDTO struct {
-		DroneID   uint64  `json:"drone_id"`
-		MissionID uint64  `json:"mission_id"`
-		Lat       float64 `json:"lat"`
-		Lon       float64 `json:"lon"`
-		Alt       float64 `json:"alt"`
-		Timestamp string  `json:"timestamp"`
-	}
-
-	var telemetry telemetryDTO
-	if err := json.Unmarshal([]byte(val), &telemetry); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to unmarshal telemetry: %v", err)
-	}
-
-	pbTelemetry := &missionv1.Telemetry{
-		DroneId:   telemetry.DroneID,
-		Lat:       telemetry.Lat,
-		Lon:       telemetry.Lon,
-		Alt:       telemetry.Alt,
-		Timestamp: telemetry.Timestamp,
-	}
-
-	return &missionv1.GetMissionTelemetryResponse{Telemetry: pbTelemetry}, nil
-}
-
-func (s *MissionServiceImpl) WatchMission(req *missionv1.WatchMissionRequest, stream missionv1.MissionService_WatchMissionServer) error {
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-stream.Context().Done():
-			return nil
-		case <-ticker.C:
-			missions, err := s.deps.Storage.GetMissionsByIDs(stream.Context(), []uint64{req.MissionId})
-			if err != nil || len(missions) == 0 {
-				continue
-			}
-			mission := missions[0]
-
-			telemetryResp, err := s.GetMissionTelemetry(stream.Context(), &missionv1.GetMissionTelemetryRequest{MissionId: req.MissionId})
-			if err != nil {
-				continue
-			}
-
-			update := &missionv1.MissionUpdate{
-				Status:    mission.Status,
-				Telemetry: telemetryResp.Telemetry,
-				Timestamp: time.Now().Format(time.RFC3339),
-			}
-
-			if err := stream.Send(update); err != nil {
-				return err
-			}
-		}
-	}
+	return &mission_api.GetMissionResponse{Mission: pbMission}, nil
 }

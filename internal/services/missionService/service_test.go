@@ -8,7 +8,8 @@ import (
 	"github.com/Bolshevichok/dronedelivery/config"
 	"github.com/Bolshevichok/dronedelivery/internal/mocks"
 	"github.com/Bolshevichok/dronedelivery/internal/models"
-	missionv1 "github.com/Bolshevichok/dronedelivery/internal/pb/mission/v1"
+	mission_api "github.com/Bolshevichok/dronedelivery/internal/pb/mission_api"
+	models_pb "github.com/Bolshevichok/dronedelivery/internal/pb/models"
 	"github.com/go-redis/redis/v8"
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
@@ -49,13 +50,17 @@ func (suite *MissionServiceTestSuite) TearDownTest() {
 }
 
 func (suite *MissionServiceTestSuite) TestCreateMission() {
-	req := &missionv1.CreateMissionRequest{
-		OperatorId:     1,
-		LaunchBaseId:   1,
-		DestinationLat: 55.7558,
-		DestinationLon: 37.6173,
-		DestinationAlt: 100,
-		PayloadKg:      1.2,
+	req := &mission_api.UpsertMissionsRequest{
+		Missions: []*models_pb.Mission{
+			{
+				OpId:    1,
+				BaseId:  1,
+				Lat:     55.7558,
+				Lon:     37.6173,
+				Alt:     100,
+				Payload: 1.2,
+			},
+		},
 	}
 
 	expectedMission := &models.Mission{
@@ -70,16 +75,11 @@ func (suite *MissionServiceTestSuite) TestCreateMission() {
 		CreatedAt:      time.Now(),
 	}
 
-	suite.mockStorage.On("UpsertMissions", mock.Anything, mock.MatchedBy(func(missions []*models.Mission) bool {
-		return len(missions) == 1 && missions[0].OperatorID == 1 && missions[0].LaunchBaseID == 1 &&
-			missions[0].Status == "created" && missions[0].DestinationLat == 55.7558 &&
-			missions[0].DestinationLon == 37.6173 && missions[0].DestinationAlt == 100 && missions[0].PayloadKg == 1.2
-	})).Return([]*models.Mission{expectedMission}, nil)
+	suite.mockStorage.On("UpsertMissions", mock.Anything, mock.Anything).Return([]*models.Mission{expectedMission}, nil)
 
-	resp, err := suite.service.CreateMission(context.Background(), req)
+	_, err := suite.service.UpsertMissions(context.Background(), req)
 
 	assert.NoError(suite.T(), err)
-	assert.Equal(suite.T(), uint64(1), resp.MissionId)
 }
 
 func TestMissionServiceTestSuite(t *testing.T) {

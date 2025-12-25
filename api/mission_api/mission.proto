@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package mission_api;
+
+option go_package = "github.com/Bolshevichok/dronedelivery/internal/pb/mission_api";
+
+import "models/models.proto";
+import "google/api/annotations.proto";
+
+service MissionService {
+  rpc UpsertMissions(UpsertMissionsRequest) returns (UpsertMissionsResponse) {
+    option (google.api.http) = {
+      post: "/missions/upsert"
+      body: "*"
+    };
+  }
+  rpc GetMission(GetMissionRequest) returns (GetMissionResponse) {
+    option (google.api.http) = {
+      get: "/missions/{mission_id}"
+    };
+  }
+}
+
+message UpsertMissionsRequest {
+  repeated models.Mission missions = 1;
+}
+
+message UpsertMissionsResponse {
+}
+
+message GetMissionRequest {
+  uint64 mission_id = 1;
+}
+
+message GetMissionResponse {
+  models.Mission mission = 1;
+}
