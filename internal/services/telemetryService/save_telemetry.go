@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/Bolshevichok/dronedelivery/internal/models"
 )
@@ -14,12 +13,11 @@ func (s *TelemetryServiceImpl) SaveTelemetry(ctx context.Context, telemetry *mod
 		return fmt.Errorf("invalid drone_id in telemetry")
 	}
 
-	key := fmt.Sprintf("telemetry:%d", telemetry.DroneID)
-
 	data, err := json.Marshal(telemetry)
 	if err != nil {
 		return err
 	}
 
-	return s.redisClient.Set(ctx, key, string(data), time.Hour).Err()
+	// Push to Redis list for consumption
+	return s.redisClient.LPush(ctx, "telemetry_queue", string(data)).Err()
 }
