@@ -6,9 +6,9 @@ import (
 	"github.com/Bolshevichok/dronedelivery/internal/models"
 )
 
-func (s *MissionService) ProcessMissionLifecycle(ctx context.Context, mission *models.Mission) error {
-	if mission == nil {
+func (s *MissionService) ProcessMissionLifecycle(ctx context.Context, event *models.MissionLifecycleEvent) error {
+	if event == nil {
 		return nil
 	}
-	return s.missionStorage.UpdateMissionStatus(ctx, mission.ID, mission.Status)
+	return s.missionStorage.UpdateMissionStatus(ctx, event.MissionID, event.Status)
 }

@@ -7,12 +7,12 @@ import (
 )
 
 type missionSvc interface {
-	ProcessMissionLifecycle(ctx context.Context, mission *models.Mission) error
+	ProcessMissionLifecycle(ctx context.Context, event *models.MissionLifecycleEvent) error
 }
 
 type MissionLifecycleProcessor interface {
-	ProcessMissionLifecycle(ctx context.Context, mission *models.Mission) error
-	Handle(ctx context.Context, mission *models.Mission) error
+	ProcessMissionLifecycle(ctx context.Context, event *models.MissionLifecycleEvent) error
+	Handle(ctx context.Context, event *models.MissionLifecycleEvent) error
 }
 
 type MissionLifecycleProcessorImpl struct {
@@ -23,6 +23,6 @@ func NewMissionLifecycleProcessor(missionSvc missionSvc) *MissionLifecycleProces
 	return &MissionLifecycleProcessorImpl{missionSvc: missionSvc}
 }
 
-func (p *MissionLifecycleProcessorImpl) ProcessMissionLifecycle(ctx context.Context, mission *models.Mission) error {
-	return p.missionSvc.ProcessMissionLifecycle(ctx, mission)
+func (p *MissionLifecycleProcessorImpl) ProcessMissionLifecycle(ctx context.Context, event *models.MissionLifecycleEvent) error {
+	return p.missionSvc.ProcessMissionLifecycle(ctx, event)
 }

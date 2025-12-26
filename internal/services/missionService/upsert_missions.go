@@ -20,7 +20,15 @@ func (s *MissionService) UpsertMissions(ctx context.Context, missions []*models.
 		}
 		mission = upsertedMissions[0]
 
-		eventBytes, _ := json.Marshal(mission)
+		missionInfo := &models.MissionInfo{
+			ID:             mission.ID,
+			Status:         mission.Status,
+			DestinationLat: mission.DestinationLat,
+			DestinationLon: mission.DestinationLon,
+			DestinationAlt: mission.DestinationAlt,
+			PayloadKg:      mission.PayloadKg,
+		}
+		eventBytes, _ := json.Marshal(missionInfo)
 		err = s.kafkaWriter.WriteMessages(ctx, kafka.Message{
 			Key:   []byte(fmt.Sprintf("%d", mission.ID)),
 			Value: eventBytes,

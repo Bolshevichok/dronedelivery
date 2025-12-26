@@ -32,9 +32,6 @@ type Mission struct {
 	Alt           float64                `protobuf:"fixed64,7,opt,name=alt,proto3" json:"alt,omitempty"`
 	Payload       float64                `protobuf:"fixed64,8,opt,name=payload,proto3" json:"payload,omitempty"`
 	CreatedAt     string                 `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	Operator      *Operator              `protobuf:"bytes,10,opt,name=operator,proto3" json:"operator,omitempty"`
-	Base          *LaunchBase            `protobuf:"bytes,11,opt,name=base,proto3" json:"base,omitempty"`
-	Drones        []*Drone               `protobuf:"bytes,12,rep,name=drones,proto3" json:"drones,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -130,27 +127,6 @@ func (x *Mission) GetCreatedAt() string {
 		return x.CreatedAt
 	}
 	return ""
-}
-
-func (x *Mission) GetOperator() *Operator {
-	if x != nil {
-		return x.Operator
-	}
-	return nil
-}
-
-func (x *Mission) GetBase() *LaunchBase {
-	if x != nil {
-		return x.Base
-	}
-	return nil
-}
-
-func (x *Mission) GetDrones() []*Drone {
-	if x != nil {
-		return x.Drones
-	}
-	return nil
 }
 
 type Operator struct {
@@ -469,7 +445,7 @@ var File_models_models_proto protoreflect.FileDescriptor
 
 const file_models_models_proto_rawDesc = "" +
 	"\n" +
-	"\x13models/models.proto\x12\x06models\"\xcb\x02\n" +
+	"\x13models/models.proto\x12\x06models\"\xce\x01\n" +
 	"\aMission\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x13\n" +
 	"\x05op_id\x18\x02 \x01(\x04R\x04opId\x12\x17\n" +
@@ -480,11 +456,7 @@ const file_models_models_proto_rawDesc = "" +
 	"\x03alt\x18\a \x01(\x01R\x03alt\x12\x18\n" +
 	"\apayload\x18\b \x01(\x01R\apayload\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\t \x01(\tR\tcreatedAt\x12,\n" +
-	"\boperator\x18\n" +
-	" \x01(\v2\x10.models.OperatorR\boperator\x12&\n" +
-	"\x04base\x18\v \x01(\v2\x12.models.LaunchBaseR\x04base\x12%\n" +
-	"\x06drones\x18\f \x03(\v2\r.models.DroneR\x06drones\"c\n" +
+	"created_at\x18\t \x01(\tR\tcreatedAt\"c\n" +
 	"\bOperator\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
@@ -536,14 +508,11 @@ var file_models_models_proto_goTypes = []any{
 	(*Telemetry)(nil),  // 4: models.Telemetry
 }
 var file_models_models_proto_depIdxs = []int32{
-	1, // 0: models.Mission.operator:type_name -> models.Operator
-	2, // 1: models.Mission.base:type_name -> models.LaunchBase
-	3, // 2: models.Mission.drones:type_name -> models.Drone
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	0, // [0:0] is the sub-list for method output_type
+	0, // [0:0] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for extension type_name
+	0, // [0:0] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_models_models_proto_init() }

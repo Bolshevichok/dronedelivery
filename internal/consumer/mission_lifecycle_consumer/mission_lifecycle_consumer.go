@@ -7,7 +7,7 @@ import (
 )
 
 type missionLifecycleProcessor interface {
-	ProcessMissionLifecycle(ctx context.Context, mission *models.Mission) error
+	ProcessMissionLifecycle(ctx context.Context, event *models.MissionLifecycleEvent) error
 }
 
 type MissionLifecycleConsumer interface {

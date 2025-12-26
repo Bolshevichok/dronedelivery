@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Operator struct {
 	ID        uint64
@@ -47,6 +50,15 @@ type Drone struct {
 	Missions     []Mission
 }
 
+type MissionInfo struct {
+	ID             uint64
+	Status         string
+	DestinationLat float64
+	DestinationLon float64
+	DestinationAlt float64
+	PayloadKg      float64
+}
+
 type MissionDrone struct {
 	MissionID          uint64
 	DroneID            uint64
@@ -58,8 +70,45 @@ type MissionDrone struct {
 	AssignedByOperator Operator
 }
 
-// DroneTelemetry is published by Drone Service to Kafka topic drone.telemetry.
-// Telemetry Service stores latest telemetry in Redis.
+type MissionLifecycleEvent struct {
+	DroneID   uint64
+	MissionID uint64
+	Status    string
+	Timestamp time.Time
+}
+
+func (e MissionLifecycleEvent) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"drone_id":   e.DroneID,
+		"mission_id": e.MissionID,
+		"status":     e.Status,
+		"timestamp":  e.Timestamp,
+	})
+}
+
+func (e *MissionLifecycleEvent) UnmarshalJSON(data []byte) error {
+	if e == nil {
+		return nil
+	}
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	if v, ok := raw["drone_id"]; ok {
+		_ = json.Unmarshal(v, &e.DroneID)
+	}
+	if v, ok := raw["mission_id"]; ok {
+		_ = json.Unmarshal(v, &e.MissionID)
+	}
+	if v, ok := raw["status"]; ok {
+		_ = json.Unmarshal(v, &e.Status)
+	}
+	if v, ok := raw["timestamp"]; ok {
+		_ = json.Unmarshal(v, &e.Timestamp)
+	}
+	return nil
+}
+
 type DroneTelemetry struct {
 	DroneID   uint64
 	MissionID uint64

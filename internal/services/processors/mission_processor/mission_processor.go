@@ -7,12 +7,12 @@ import (
 )
 
 type droneSvc interface {
-	ProcessMissionCreated(ctx context.Context, mission *models.Mission) error
+	ProcessMissionCreated(ctx context.Context, mission *models.MissionInfo) error
 }
 
 type MissionProcessor interface {
-	ProcessMissionCreated(ctx context.Context, mission *models.Mission) error
-	Handle(ctx context.Context, mission *models.Mission) error
+	ProcessMissionCreated(ctx context.Context, mission *models.MissionInfo) error
+	Handle(ctx context.Context, mission *models.MissionInfo) error
 }
 
 type MissionProcessorImpl struct {
@@ -25,6 +25,6 @@ func NewMissionProcessor(droneSvc droneSvc) *MissionProcessorImpl {
 	}
 }
 
-func (p *MissionProcessorImpl) ProcessMissionCreated(ctx context.Context, mission *models.Mission) error {
+func (p *MissionProcessorImpl) ProcessMissionCreated(ctx context.Context, mission *models.MissionInfo) error {
 	return p.droneSvc.ProcessMissionCreated(ctx, mission)
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func (s *DroneService) ProcessMissionCreated(ctx context.Context, mission *models.Mission) error {
+func (s *DroneService) ProcessMissionCreated(ctx context.Context, mission *models.MissionInfo) error {
 	if mission == nil {
 		return fmt.Errorf("mission is nil")
 	}
@@ -33,7 +33,7 @@ func (s *DroneService) ProcessMissionCreated(ctx context.Context, mission *model
 	return nil
 }
 
-func (s *DroneService) simulateMission(ctx context.Context, missionID, droneID uint64, mission *models.Mission) {
+func (s *DroneService) simulateMission(ctx context.Context, missionID, droneID uint64, mission *models.MissionInfo) {
 	time.Sleep(5 * time.Second)
 	s.publishLifecycle(ctx, missionID, droneID, "picked_up", "")
 
@@ -48,10 +48,14 @@ func (s *DroneService) simulateMission(ctx context.Context, missionID, droneID u
 }
 
 func (s *DroneService) publishLifecycle(ctx context.Context, missionID, droneID uint64, status, details string) error {
-	eventBytes, _ := json.Marshal(&models.Mission{
-		ID:     missionID,
-		Status: status,
-	})
+	_ = details
+	event := &models.MissionLifecycleEvent{
+		DroneID:   droneID,
+		MissionID: missionID,
+		Status:    status,
+		Timestamp: time.Now().UTC(),
+	}
+	eventBytes, _ := json.Marshal(event)
 	writeCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	err := s.lifecycleWriter.WriteMessages(writeCtx, kafka.Message{

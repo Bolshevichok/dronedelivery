@@ -10,26 +10,45 @@ import (
 func (s *MissionService) GetMission(ctx context.Context, missionID uint64) (*models.Mission, error) {
 	missions, err := s.missionStorage.GetMissionsByIDs(ctx, []uint64{missionID})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get mission: %w", err)
 	}
 	if len(missions) == 0 {
 		return nil, fmt.Errorf("mission not found")
 	}
-
 	mission := missions[0]
 
-	// Read telemetry for drones in the mission
-	for _, drone := range mission.Drones {
-		telemetry, err := s.GetDroneTelemetry(ctx, fmt.Sprintf("%d", drone.ID))
-		if err != nil {
-			// Log error but don't fail the request
-			fmt.Printf("Failed to get telemetry for drone %d: %v\n", drone.ID, err)
-			continue
-		}
-		// For example, update drone status or add telemetry to model
-		// Here we just print for demo
-		fmt.Printf("Telemetry for drone %d: %s\n", drone.ID, telemetry)
-		// If needed, update mission.Drones[i].Status based on telemetry
+	// Load related data
+	operators, err := s.missionStorage.GetOperatorsByIDs(ctx, []uint64{mission.OperatorID})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get operator: %w", err)
+	}
+	if len(operators) > 0 {
+		mission.Operator = *operators[0]
+	}
+
+	launchBases, err := s.missionStorage.GetLaunchBasesByIDs(ctx, []uint64{mission.LaunchBaseID})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get launch base: %w", err)
+	}
+	if len(launchBases) > 0 {
+		mission.LaunchBase = *launchBases[0]
+	}
+
+	missionDrones, err := s.missionStorage.GetMissionDronesByMissionID(ctx, missionID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get mission drones: %w", err)
+	}
+	droneIDs := make([]uint64, len(missionDrones))
+	for i, md := range missionDrones {
+		droneIDs[i] = md.DroneID
+	}
+	drones, err := s.missionStorage.GetDronesByIDs(ctx, droneIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get drones: %w", err)
+	}
+	mission.Drones = make([]models.Drone, len(drones))
+	for i, d := range drones {
+		mission.Drones[i] = *d
 	}
 
 	return mission, nil

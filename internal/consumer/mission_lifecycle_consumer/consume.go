@@ -27,18 +27,18 @@ func (c *MissionLifecycleConsumerImpl) Consume(ctx context.Context) {
 			continue
 		}
 
-		var mission *models.Mission
-		err = json.Unmarshal(msg.Value, &mission)
+		var event *models.MissionLifecycleEvent
+		err = json.Unmarshal(msg.Value, &event)
 		if err != nil {
 			slog.Error("parse", "error", err)
 			continue
 		}
-		if mission == nil || mission.ID == 0 || mission.Status == "" {
+		if event == nil || event.MissionID == 0 || event.DroneID == 0 || event.Status == "" {
 			slog.Error("Invalid mission lifecycle")
 			continue
 		}
 
-		err = c.processor.ProcessMissionLifecycle(ctx, mission)
+		err = c.processor.ProcessMissionLifecycle(ctx, event)
 		if err != nil {
 			slog.Error("ProcessMissionLifecycle error", "error", err.Error())
 		}

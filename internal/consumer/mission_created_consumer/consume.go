@@ -26,7 +26,7 @@ func (c *MissionCreatedConsumerImpl) Consume(ctx context.Context) {
 			slog.Error("MissionCreatedConsumer.Consume error", "error", err.Error())
 			continue
 		}
-		var mission *models.Mission
+		var mission *models.MissionInfo
 		err = json.Unmarshal(msg.Value, &mission)
 		if err != nil {
 			slog.Error("parse", "error", err)

@@ -7,7 +7,7 @@ import (
 )
 
 type missionProcessor interface {
-	ProcessMissionCreated(ctx context.Context, mission *models.Mission) error
+	ProcessMissionCreated(ctx context.Context, mission *models.MissionInfo) error
 }
 
 type MissionCreatedConsumer interface {

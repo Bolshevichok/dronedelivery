@@ -15,6 +15,10 @@ type MissionStorage interface {
 	UpsertMissions(ctx context.Context, missions []*models.Mission) ([]*models.Mission, error)
 	GetMissionsByIDs(ctx context.Context, IDs []uint64) ([]*models.Mission, error)
 	UpdateMissionStatus(ctx context.Context, missionID uint64, status string) error
+	GetOperatorsByIDs(ctx context.Context, IDs []uint64) ([]*models.Operator, error)
+	GetLaunchBasesByIDs(ctx context.Context, IDs []uint64) ([]*models.LaunchBase, error)
+	GetDronesByIDs(ctx context.Context, IDs []uint64) ([]*models.Drone, error)
+	GetMissionDronesByMissionID(ctx context.Context, missionID uint64) ([]*models.MissionDrone, error)
 }
 
 type MissionService struct {

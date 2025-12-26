@@ -6,6 +6,6 @@ import (
 	"github.com/Bolshevichok/dronedelivery/internal/models"
 )
 
-func (p *MissionProcessorImpl) Handle(ctx context.Context, mission *models.Mission) error {
+func (p *MissionProcessorImpl) Handle(ctx context.Context, mission *models.MissionInfo) error {
 	return p.droneSvc.ProcessMissionCreated(ctx, mission)
 }

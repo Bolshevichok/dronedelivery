@@ -14,9 +14,6 @@ message Mission {
   double alt = 7;
   double payload = 8;
   string created_at = 9;
-  Operator operator = 10;
-  LaunchBase base = 11;
-  repeated Drone drones = 12;
 }
 
 message Operator {

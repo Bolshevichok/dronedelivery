@@ -6,6 +6,6 @@ import (
 	"github.com/Bolshevichok/dronedelivery/internal/models"
 )
 
-func (p *MissionLifecycleProcessorImpl) Handle(ctx context.Context, mission *models.Mission) error {
-	return p.missionSvc.ProcessMissionLifecycle(ctx, mission)
+func (p *MissionLifecycleProcessorImpl) Handle(ctx context.Context, event *models.MissionLifecycleEvent) error {
+	return p.missionSvc.ProcessMissionLifecycle(ctx, event)
 }
