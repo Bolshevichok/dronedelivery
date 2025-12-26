@@ -73,7 +73,7 @@ func (s *DroneService) publishLifecycle(ctx context.Context, missionID, droneID 
 	err := s.lifecycleWriter.WriteMessages(ctx, kafka.Message{
 		Key:   []byte(fmt.Sprintf("%d", missionID)),
 		Value: eventBytes,
-		Topic: s.lifecycleWriter.Topic,
+		Topic: "drone.lifecycle",
 	})
 	if err != nil {
 		log.Printf("Failed to publish lifecycle: %v", err)
@@ -99,7 +99,7 @@ func (s *DroneService) simulateTelemetry(ctx context.Context, missionID, droneID
 		err := s.telemetryWriter.WriteMessages(ctx, kafka.Message{
 			Key:   []byte(fmt.Sprintf("%d", droneID)),
 			Value: eventBytes,
-			Topic: s.telemetryWriter.Topic,
+			Topic: "drone.telemetry",
 		})
 		if err != nil {
 			log.Printf("Failed to publish telemetry: %v", err)
