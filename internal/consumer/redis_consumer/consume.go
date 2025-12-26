@@ -6,10 +6,10 @@ import (
 	"time"
 )
 
-func (c *RedisConsumerImpl) Consume() {
+func (c *RedisConsumerImpl) Consume(ctx context.Context) {
 	slog.Info("Starting Redis consumer on list", "list", c.channel)
 	for {
-		result, err := c.redisClient.BRPop(context.Background(), 0*time.Second, c.channel).Result()
+		result, err := c.redisClient.BRPop(ctx, 0*time.Second, c.channel).Result()
 		if err != nil {
 			slog.Error("Error reading from Redis list", "error", err.Error())
 			continue

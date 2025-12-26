@@ -1,11 +1,13 @@
 package redis_consumer
 
 import (
+	"context"
+
 	"github.com/go-redis/redis/v8"
 )
 
 type RedisConsumer interface {
-	Consume()
+	Consume(ctx context.Context)
 }
 
 type RedisConsumerImpl struct {

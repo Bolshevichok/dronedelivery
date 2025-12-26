@@ -18,5 +18,5 @@ func main() {
 	missionProcessor := bootstrap.InitMissionProcessor(droneService)
 	missionCreatedConsumer := bootstrap.InitMissionCreatedConsumer(cfg, missionProcessor)
 
-	bootstrap.AppRunConsumer(missionCreatedConsumer)
+	bootstrap.AppRunConsumers(missionCreatedConsumer)
 }

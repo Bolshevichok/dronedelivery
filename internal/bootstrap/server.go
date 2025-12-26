@@ -6,14 +6,20 @@ import (
 	"net"
 
 	"github.com/Bolshevichok/dronedelivery/internal/api/mission_api"
-	"github.com/Bolshevichok/dronedelivery/internal/consumer/mission_created_consumer"
-	"github.com/Bolshevichok/dronedelivery/internal/consumer/telemetry_consumer"
 	pb_mission_api "github.com/Bolshevichok/dronedelivery/internal/pb/mission_api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
-func AppRun(api *mission_api.MissionAPI) {
+type Consumer interface {
+	Consume(ctx context.Context)
+}
+
+func AppRun(api *mission_api.MissionAPI, consumers ...Consumer) {
+	for _, consumer := range consumers {
+		go consumer.Consume(context.Background())
+	}
+
 	grpcServer := grpc.NewServer()
 	pb_mission_api.RegisterMissionServiceServer(grpcServer, api)
 	reflection.Register(grpcServer)
@@ -28,12 +34,10 @@ func AppRun(api *mission_api.MissionAPI) {
 	}
 }
 
-func AppRunConsumer(consumer mission_created_consumer.MissionCreatedConsumer) {
-	// This blocks forever.
-	consumer.Consume(context.Background())
-}
-
-func AppRunTelemetryConsumer(consumer telemetry_consumer.TelemetryConsumer) {
-	// This blocks forever.
-	consumer.Consume(context.Background())
+func AppRunConsumers(consumers ...Consumer) {
+	for _, consumer := range consumers {
+		go consumer.Consume(context.Background())
+	}
+	// Block forever, since no server to run
+	select {}
 }

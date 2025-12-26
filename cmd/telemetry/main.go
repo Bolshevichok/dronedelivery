@@ -18,5 +18,5 @@ func main() {
 	telemetryProcessor := bootstrap.InitTelemetryProcessor(telemetryService)
 	telemetryConsumer := bootstrap.InitTelemetryConsumer(cfg, telemetryProcessor)
 
-	bootstrap.AppRunTelemetryConsumer(telemetryConsumer)
+	bootstrap.AppRunConsumers(telemetryConsumer)
 }
