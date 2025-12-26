@@ -14,6 +14,7 @@ import (
 type MissionStorage interface {
 	UpsertMissions(ctx context.Context, missions []*models.Mission) ([]*models.Mission, error)
 	GetMissionsByIDs(ctx context.Context, IDs []uint64) ([]*models.Mission, error)
+	UpdateMissionStatus(ctx context.Context, missionID uint64, status string) error
 }
 
 type MissionService struct {

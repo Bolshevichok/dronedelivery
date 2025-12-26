@@ -57,3 +57,14 @@ type MissionDrone struct {
 	Drone              Drone
 	AssignedByOperator Operator
 }
+
+// DroneTelemetry is published by Drone Service to Kafka topic drone.telemetry.
+// Telemetry Service stores latest telemetry in Redis.
+type DroneTelemetry struct {
+	DroneID   uint64
+	MissionID uint64
+	Lat       float64
+	Lon       float64
+	Alt       float64
+	Timestamp time.Time
+}

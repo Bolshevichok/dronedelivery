@@ -13,9 +13,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-func AppRun(api *mission_api.MissionAPI, consumer mission_created_consumer.MissionCreatedConsumer) {
-	go consumer.Consume(context.Background())
-
+func AppRun(api *mission_api.MissionAPI) {
 	grpcServer := grpc.NewServer()
 	pb_mission_api.RegisterMissionServiceServer(grpcServer, api)
 	reflection.Register(grpcServer)
@@ -31,9 +29,11 @@ func AppRun(api *mission_api.MissionAPI, consumer mission_created_consumer.Missi
 }
 
 func AppRunConsumer(consumer mission_created_consumer.MissionCreatedConsumer) {
+	// This blocks forever.
 	consumer.Consume(context.Background())
 }
 
 func AppRunTelemetryConsumer(consumer telemetry_consumer.TelemetryConsumer) {
+	// This blocks forever.
 	consumer.Consume(context.Background())
 }

@@ -5,7 +5,9 @@ import (
 
 	"github.com/Bolshevichok/dronedelivery/config"
 	"github.com/Bolshevichok/dronedelivery/internal/consumer/mission_created_consumer"
+	"github.com/Bolshevichok/dronedelivery/internal/consumer/mission_lifecycle_consumer"
 	"github.com/Bolshevichok/dronedelivery/internal/consumer/telemetry_consumer"
+	missionlifecycleprocessor "github.com/Bolshevichok/dronedelivery/internal/services/processors/mission_lifecycle_processor"
 	missionprocessor "github.com/Bolshevichok/dronedelivery/internal/services/processors/mission_processor"
 	telemetryprocessor "github.com/Bolshevichok/dronedelivery/internal/services/processors/telemetry_processor"
 )
@@ -18,4 +20,9 @@ func InitMissionCreatedConsumer(cfg *config.Config, missionProcessor *missionpro
 func InitTelemetryConsumer(cfg *config.Config, telemetryProcessor *telemetryprocessor.TelemetryProcessorImpl) telemetry_consumer.TelemetryConsumer {
 	kafkaBrokers := []string{fmt.Sprintf("%s:%d", cfg.Kafka.Host, cfg.Kafka.Port)}
 	return telemetry_consumer.NewTelemetryConsumer(telemetryProcessor, kafkaBrokers, cfg.Kafka.DroneTelemetryTopic)
+}
+
+func InitMissionLifecycleConsumer(cfg *config.Config, processor *missionlifecycleprocessor.MissionLifecycleProcessorImpl) mission_lifecycle_consumer.MissionLifecycleConsumer {
+	kafkaBrokers := []string{fmt.Sprintf("%s:%d", cfg.Kafka.Host, cfg.Kafka.Port)}
+	return mission_lifecycle_consumer.NewMissionLifecycleConsumer(processor, kafkaBrokers, cfg.Kafka.MissionsLifecycleTopic)
 }

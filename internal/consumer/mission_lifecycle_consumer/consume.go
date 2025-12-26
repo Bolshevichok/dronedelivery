@@ -1,4 +1,4 @@
-package mission_created_consumer
+package mission_lifecycle_consumer
 
 import (
 	"context"
@@ -10,10 +10,10 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func (c *MissionCreatedConsumerImpl) Consume(ctx context.Context) {
+func (c *MissionLifecycleConsumerImpl) Consume(ctx context.Context) {
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:           c.kafkaBroker,
-		GroupID:           "DroneService_group",
+		GroupID:           "MissionService_group",
 		Topic:             c.topicName,
 		HeartbeatInterval: 3 * time.Second,
 		SessionTimeout:    30 * time.Second,
@@ -23,22 +23,24 @@ func (c *MissionCreatedConsumerImpl) Consume(ctx context.Context) {
 	for {
 		msg, err := r.ReadMessage(ctx)
 		if err != nil {
-			slog.Error("MissionCreatedConsumer.Consume error", "error", err.Error())
+			slog.Error("MissionLifecycleConsumer.Consume error", "error", err.Error())
 			continue
 		}
+
 		var mission *models.Mission
 		err = json.Unmarshal(msg.Value, &mission)
 		if err != nil {
 			slog.Error("parse", "error", err)
 			continue
 		}
-		if mission == nil || mission.ID == 0 {
-			slog.Error("Invalid mission")
+		if mission == nil || mission.ID == 0 || mission.Status == "" {
+			slog.Error("Invalid mission lifecycle")
 			continue
 		}
-		err = c.processor.ProcessMissionCreated(ctx, mission)
+
+		err = c.processor.ProcessMissionLifecycle(ctx, mission)
 		if err != nil {
-			slog.Error("ProcessMissionCreated error", "error", err.Error())
+			slog.Error("ProcessMissionLifecycle error", "error", err.Error())
 		}
 	}
 }

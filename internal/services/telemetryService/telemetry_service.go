@@ -5,12 +5,13 @@ import (
 	"fmt"
 
 	"github.com/Bolshevichok/dronedelivery/config"
+	"github.com/Bolshevichok/dronedelivery/internal/models"
 	"github.com/go-redis/redis/v8"
 )
 
 // TelemetryService interface
 type TelemetryService interface {
-	SaveTelemetry(ctx context.Context, telemetry map[string]interface{}) error
+	SaveTelemetry(ctx context.Context, telemetry *models.DroneTelemetry) error
 }
 
 type TelemetryServiceImpl struct {

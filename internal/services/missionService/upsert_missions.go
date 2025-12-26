@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/Bolshevichok/dronedelivery/internal/models"
 	"github.com/segmentio/kafka-go"
@@ -21,13 +20,7 @@ func (s *MissionService) UpsertMissions(ctx context.Context, missions []*models.
 		}
 		mission = upsertedMissions[0]
 
-		event := map[string]interface{}{
-			"event_id":   fmt.Sprintf("mission-created-%d", mission.ID),
-			"mission_id": mission.ID,
-			"base_id":    mission.LaunchBaseID,
-			"timestamp":  time.Now().Format(time.RFC3339),
-		}
-		eventBytes, _ := json.Marshal(event)
+		eventBytes, _ := json.Marshal(mission)
 		err = s.kafkaWriter.WriteMessages(ctx, kafka.Message{
 			Key:   []byte(fmt.Sprintf("%d", mission.ID)),
 			Value: eventBytes,

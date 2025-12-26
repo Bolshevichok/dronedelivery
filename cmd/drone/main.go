@@ -14,8 +14,7 @@ func main() {
 		panic(fmt.Sprintf("ошибка парсинга конфига, %v", err))
 	}
 
-	storage := bootstrap.InitPGStorage(cfg)
-	droneService := bootstrap.InitDroneService(storage, cfg)
+	droneService := bootstrap.InitDroneService(cfg)
 	missionProcessor := bootstrap.InitMissionProcessor(droneService)
 	missionCreatedConsumer := bootstrap.InitMissionCreatedConsumer(cfg, missionProcessor)
 

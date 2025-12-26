@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -16,10 +17,11 @@ func main() {
 
 	storage := bootstrap.InitPGStorage(cfg)
 	missionService := bootstrap.InitMissionService(storage, cfg)
-	droneService := bootstrap.InitDroneService(storage, cfg)
-	missionProcessor := bootstrap.InitMissionProcessor(droneService)
-	missionCreatedConsumer := bootstrap.InitMissionCreatedConsumer(cfg, missionProcessor)
 	missionApi := bootstrap.InitMissionAPI(missionService)
 
-	bootstrap.AppRun(missionApi, missionCreatedConsumer)
+	missionLifecycleProcessor := bootstrap.InitMissionLifecycleProcessor(missionService)
+	missionLifecycleConsumer := bootstrap.InitMissionLifecycleConsumer(cfg, missionLifecycleProcessor)
+	go missionLifecycleConsumer.Consume(context.Background())
+
+	bootstrap.AppRun(missionApi)
 }

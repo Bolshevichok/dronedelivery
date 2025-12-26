@@ -2,10 +2,12 @@ package telemetry_consumer
 
 import (
 	"context"
+
+	"github.com/Bolshevichok/dronedelivery/internal/models"
 )
 
 type telemetryProcessor interface {
-	ProcessTelemetry(ctx context.Context, telemetry map[string]interface{}) error
+	ProcessTelemetry(ctx context.Context, telemetry *models.DroneTelemetry) error
 }
 
 type TelemetryConsumer interface {

@@ -2,10 +2,12 @@ package mission_created_consumer
 
 import (
 	"context"
+
+	"github.com/Bolshevichok/dronedelivery/internal/models"
 )
 
 type missionProcessor interface {
-	ProcessMissionCreated(ctx context.Context, missionID uint64) error
+	ProcessMissionCreated(ctx context.Context, mission *models.Mission) error
 }
 
 type MissionCreatedConsumer interface {

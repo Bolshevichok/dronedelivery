@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/Bolshevichok/dronedelivery/internal/models"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -23,11 +24,16 @@ func (c *TelemetryConsumerImpl) Consume(ctx context.Context) {
 		msg, err := r.ReadMessage(ctx)
 		if err != nil {
 			slog.Error("TelemetryConsumer.Consume error", "error", err.Error())
+			continue
 		}
-		var telemetry map[string]interface{}
+		var telemetry *models.DroneTelemetry
 		err = json.Unmarshal(msg.Value, &telemetry)
 		if err != nil {
 			slog.Error("parse", "error", err)
+			continue
+		}
+		if telemetry == nil || telemetry.DroneID == 0 {
+			slog.Error("Invalid drone_id in telemetry")
 			continue
 		}
 		err = c.processor.ProcessTelemetry(ctx, telemetry)
