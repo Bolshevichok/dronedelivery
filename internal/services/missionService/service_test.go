@@ -8,8 +8,6 @@ import (
 
 	"github.com/Bolshevichok/dronedelivery/config"
 	"github.com/Bolshevichok/dronedelivery/internal/models"
-	mission_api "github.com/Bolshevichok/dronedelivery/internal/pb/mission_api"
-	models_pb "github.com/Bolshevichok/dronedelivery/internal/pb/models"
 	mockStorage "github.com/Bolshevichok/dronedelivery/internal/services/missionService/mocks"
 	"github.com/go-redis/redis/v8"
 	"github.com/segmentio/kafka-go"
@@ -51,18 +49,6 @@ func (suite *MissionServiceTestSuite) TearDownTest() {
 }
 
 func (suite *MissionServiceTestSuite) TestCreateMission() {
-	req := &mission_api.UpsertMissionsRequest{
-		Missions: []*models_pb.Mission{
-			{
-				OpId:    1,
-				BaseId:  1,
-				Lat:     55.7558,
-				Lon:     37.6173,
-				Alt:     100,
-				Payload: 1.2,
-			},
-		},
-	}
 
 	expectedMission := &models.Mission{
 		ID:             1,
@@ -78,38 +64,45 @@ func (suite *MissionServiceTestSuite) TestCreateMission() {
 
 	suite.mockStorage.On("UpsertMissions", mock.Anything, mock.Anything).Return([]*models.Mission{expectedMission}, nil)
 
-	_, err := suite.service.UpsertMissions(context.Background(), req)
+	missions := []*models.Mission{
+		{
+			OperatorID:     1,
+			LaunchBaseID:   1,
+			Status:         "",
+			DestinationLat: 55.7558,
+			DestinationLon: 37.6173,
+			DestinationAlt: 100,
+			PayloadKg:      1.2,
+			CreatedAt:      time.Now(),
+		},
+	}
+
+	_, err := suite.service.UpsertMissions(context.Background(), missions)
 
 	assert.NoError(suite.T(), err)
 }
 
 func (suite *MissionServiceTestSuite) TestUpsertMissionsError() {
-	req := &mission_api.UpsertMissionsRequest{
-		Missions: []*models_pb.Mission{
-			{
-				OpId:    1,
-				BaseId:  1,
-				Lat:     55.7558,
-				Lon:     37.6173,
-				Alt:     100,
-				Payload: 1.2,
-			},
+	missions := []*models.Mission{
+		{
+			OperatorID:     1,
+			LaunchBaseID:   1,
+			DestinationLat: 55.7558,
+			DestinationLon: 37.6173,
+			DestinationAlt: 100,
+			PayloadKg:      1.2,
 		},
 	}
 
 	suite.mockStorage.On("UpsertMissions", mock.Anything, mock.Anything).Return([]*models.Mission(nil), fmt.Errorf("storage error"))
 
-	_, err := suite.service.UpsertMissions(context.Background(), req)
+	_, err := suite.service.UpsertMissions(context.Background(), missions)
 
 	assert.Error(suite.T(), err)
 	assert.Contains(suite.T(), err.Error(), "failed to upsert mission")
 }
 
 func (suite *MissionServiceTestSuite) TestGetMission() {
-	req := &mission_api.GetMissionRequest{
-		MissionId: 1,
-	}
-
 	expectedMission := &models.Mission{
 		ID:             1,
 		OperatorID:     1,
@@ -138,37 +131,29 @@ func (suite *MissionServiceTestSuite) TestGetMission() {
 
 	suite.mockStorage.On("GetMissionsByIDs", mock.Anything, []uint64{1}).Return([]*models.Mission{expectedMission}, nil)
 
-	resp, err := suite.service.GetMission(context.Background(), req)
+	mission, err := suite.service.GetMission(context.Background(), 1)
 
 	assert.NoError(suite.T(), err)
-	assert.NotNil(suite.T(), resp.Mission)
-	assert.Equal(suite.T(), uint64(1), resp.Mission.Id)
+	assert.NotNil(suite.T(), mission)
+	assert.Equal(suite.T(), uint64(1), mission.ID)
 }
 
 func (suite *MissionServiceTestSuite) TestGetMissionNotFound() {
-	req := &mission_api.GetMissionRequest{
-		MissionId: 1,
-	}
-
 	suite.mockStorage.On("GetMissionsByIDs", mock.Anything, []uint64{1}).Return([]*models.Mission{}, nil)
 
-	_, err := suite.service.GetMission(context.Background(), req)
+	_, err := suite.service.GetMission(context.Background(), 1)
 
 	assert.Error(suite.T(), err)
 	assert.Contains(suite.T(), err.Error(), "mission not found")
 }
 
 func (suite *MissionServiceTestSuite) TestGetMissionStorageError() {
-	req := &mission_api.GetMissionRequest{
-		MissionId: 1,
-	}
-
 	suite.mockStorage.On("GetMissionsByIDs", mock.Anything, []uint64{1}).Return([]*models.Mission(nil), fmt.Errorf("storage error"))
 
-	_, err := suite.service.GetMission(context.Background(), req)
+	_, err := suite.service.GetMission(context.Background(), 1)
 
 	assert.Error(suite.T(), err)
-	assert.Contains(suite.T(), err.Error(), "failed to get mission")
+	assert.Contains(suite.T(), err.Error(), "storage error")
 }
 
 func TestMissionServiceTestSuite(t *testing.T) {
