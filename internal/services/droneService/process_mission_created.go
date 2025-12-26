@@ -37,9 +37,9 @@ func (s *DroneService) simulateMission(ctx context.Context, missionID, droneID u
 	time.Sleep(5 * time.Second)
 	s.publishLifecycle(ctx, missionID, droneID, "picked_up", "")
 
-	// Without launch base coordinates we simulate "no movement".
-	startLat := mission.DestinationLat
-	startLon := mission.DestinationLon
+	// Start from launch base coordinates
+	startLat := 31.1234
+	startLon := 11.3212
 
 	go s.simulateTelemetry(ctx, missionID, droneID, startLat, startLon, mission.DestinationLat, mission.DestinationLon)
 
