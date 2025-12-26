@@ -254,7 +254,7 @@ func (suite *MissionServiceTestSuite) TestGetDroneTelemetrySuccess() {
 	client := redis.NewClient(&redis.Options{Addr: mr.Addr()})
 	suite.service.redisClient = client
 
-	err = client.Set(context.Background(), "telemetry:123", "{\"ok\":true}", 0).Err()
+	err = client.Set(context.Background(), "drone:123", "{\"ok\":true}", 0).Err()
 	assert.NoError(suite.T(), err)
 
 	val, err := suite.service.GetDroneTelemetry(context.Background(), "123")
