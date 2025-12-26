@@ -107,7 +107,6 @@ func (suite *MissionServiceTestSuite) TestUpsertMissionsKafkaPublishErrorIsIgnor
 	expectedMission := &models.Mission{ID: 1, Status: "created"}
 	suite.mockStorage.On("UpsertMissions", mock.Anything, mock.Anything).Return([]*models.Mission{expectedMission}, nil)
 
-	// Force publish failure to hit the slog.Error branch.
 	suite.service.kafkaWriter = &kafka.Writer{
 		Addr:     kafka.TCP("127.0.0.1:1"),
 		Topic:    "missions.created",
@@ -255,7 +254,7 @@ func (suite *MissionServiceTestSuite) TestGetDroneTelemetrySuccess() {
 	client := redis.NewClient(&redis.Options{Addr: mr.Addr()})
 	suite.service.redisClient = client
 
-	err = client.Set(context.Background(), "drone:123", "{\"ok\":true}", 0).Err()
+	err = client.Set(context.Background(), "telemetry:123", "{\"ok\":true}", 0).Err()
 	assert.NoError(suite.T(), err)
 
 	val, err := suite.service.GetDroneTelemetry(context.Background(), "123")

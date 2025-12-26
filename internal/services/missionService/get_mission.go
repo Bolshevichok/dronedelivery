@@ -17,7 +17,6 @@ func (s *MissionService) GetMission(ctx context.Context, missionID uint64) (*mod
 	}
 	mission := missions[0]
 
-	// Load related data
 	operators, err := s.missionStorage.GetOperatorsByIDs(ctx, []uint64{mission.OperatorID})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get operator: %w", err)

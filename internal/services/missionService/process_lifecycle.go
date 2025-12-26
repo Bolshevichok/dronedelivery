@@ -10,5 +10,6 @@ func (s *MissionService) ProcessMissionLifecycle(ctx context.Context, event *mod
 	if event == nil {
 		return nil
 	}
+
 	return s.missionStorage.UpdateMissionStatus(ctx, event.MissionID, event.Status)
 }
