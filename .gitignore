@@ -9,3 +9,4 @@
 
 # Local env/config overrides
 *.local.yaml
+.vscode
