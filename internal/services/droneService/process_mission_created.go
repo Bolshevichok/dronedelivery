@@ -7,41 +7,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/Bolshevichok/dronedelivery/config"
-	"github.com/Bolshevichok/dronedelivery/internal"
 	"github.com/Bolshevichok/dronedelivery/internal/models"
 	"github.com/segmentio/kafka-go"
 )
-
-// DroneService interface
-type DroneService interface {
-	ProcessMissionCreated(ctx context.Context, missionID uint64)
-}
-
-type DroneServiceImpl struct {
-	storage         internal.Storage
-	lifecycleWriter *kafka.Writer
-	telemetryWriter *kafka.Writer
-}
-
-func NewDroneService(storage internal.Storage, cfg *config.Config) DroneService {
-	lifecycleWriter := &kafka.Writer{
-		Addr:     kafka.TCP(fmt.Sprintf("%s:%d", cfg.Kafka.Host, cfg.Kafka.Port)),
-		Topic:    cfg.Kafka.DroneLifecycleTopic,
-		Balancer: &kafka.LeastBytes{},
-	}
-	telemetryWriter := &kafka.Writer{
-		Addr:     kafka.TCP(fmt.Sprintf("%s:%d", cfg.Kafka.Host, cfg.Kafka.Port)),
-		Topic:    cfg.Kafka.DroneTelemetryTopic,
-		Balancer: &kafka.LeastBytes{},
-	}
-
-	return &DroneServiceImpl{
-		storage:         storage,
-		lifecycleWriter: lifecycleWriter,
-		telemetryWriter: telemetryWriter,
-	}
-}
 
 func (s *DroneServiceImpl) ProcessMissionCreated(ctx context.Context, missionID uint64) {
 	missions, err := s.storage.GetMissionsByIDs(ctx, []uint64{missionID})
