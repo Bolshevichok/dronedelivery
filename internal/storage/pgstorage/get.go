@@ -21,16 +21,11 @@ func (storage *PGstorage) GetOperatorsByIDs(ctx context.Context, IDs []uint64) (
 	defer rows.Close()
 	var operators []*models.Operator
 	for rows.Next() {
-		var op Operator
+		var op models.Operator
 		if err := rows.Scan(&op.ID, &op.Email, &op.Name, &op.CreatedAt); err != nil {
 			return nil, errors.Wrap(err, "failed to scan row")
 		}
-		operators = append(operators, &models.Operator{
-			ID:        op.ID,
-			Email:     op.Email,
-			Name:      op.Name,
-			CreatedAt: op.CreatedAt,
-		})
+		operators = append(operators, &op)
 	}
 	return operators, nil
 }
@@ -54,18 +49,11 @@ func (storage *PGstorage) GetLaunchBasesByIDs(ctx context.Context, IDs []uint64)
 	defer rows.Close()
 	var launchBases []*models.LaunchBase
 	for rows.Next() {
-		var lb LaunchBase
+		var lb models.LaunchBase
 		if err := rows.Scan(&lb.ID, &lb.Name, &lb.Lat, &lb.Lon, &lb.Alt, &lb.CreatedAt); err != nil {
 			return nil, errors.Wrap(err, "failed to scan row")
 		}
-		launchBases = append(launchBases, &models.LaunchBase{
-			ID:        lb.ID,
-			Name:      lb.Name,
-			Lat:       lb.Lat,
-			Lon:       lb.Lon,
-			Alt:       lb.Alt,
-			CreatedAt: lb.CreatedAt,
-		})
+		launchBases = append(launchBases, &lb)
 	}
 	return launchBases, nil
 }
@@ -89,18 +77,11 @@ func (storage *PGstorage) GetDronesByIDs(ctx context.Context, IDs []uint64) ([]*
 	defer rows.Close()
 	var drones []*models.Drone
 	for rows.Next() {
-		var d Drone
+		var d models.Drone
 		if err := rows.Scan(&d.ID, &d.Serial, &d.Model, &d.Status, &d.LaunchBaseID, &d.CreatedAt); err != nil {
 			return nil, errors.Wrap(err, "failed to scan row")
 		}
-		drones = append(drones, &models.Drone{
-			ID:           d.ID,
-			Serial:       d.Serial,
-			Model:        d.Model,
-			Status:       d.Status,
-			LaunchBaseID: d.LaunchBaseID,
-			CreatedAt:    d.CreatedAt,
-		})
+		drones = append(drones, &d)
 	}
 	return drones, nil
 }
@@ -124,21 +105,11 @@ func (storage *PGstorage) GetMissionsByIDs(ctx context.Context, IDs []uint64) ([
 	defer rows.Close()
 	var missions []*models.Mission
 	for rows.Next() {
-		var m Mission
+		var m models.Mission
 		if err := rows.Scan(&m.ID, &m.OperatorID, &m.LaunchBaseID, &m.Status, &m.DestinationLat, &m.DestinationLon, &m.DestinationAlt, &m.PayloadKg, &m.CreatedAt); err != nil {
 			return nil, errors.Wrap(err, "failed to scan row")
 		}
-		missions = append(missions, &models.Mission{
-			ID:             m.ID,
-			OperatorID:     m.OperatorID,
-			LaunchBaseID:   m.LaunchBaseID,
-			Status:         m.Status,
-			DestinationLat: m.DestinationLat,
-			DestinationLon: m.DestinationLon,
-			DestinationAlt: m.DestinationAlt,
-			PayloadKg:      m.PayloadKg,
-			CreatedAt:      m.CreatedAt,
-		})
+		missions = append(missions, &m)
 	}
 	return missions, nil
 }
@@ -162,17 +133,11 @@ func (storage *PGstorage) GetMissionDronesByMissionIDs(ctx context.Context, miss
 	defer rows.Close()
 	var missionDrones []*models.MissionDrone
 	for rows.Next() {
-		var md MissionDrone
+		var md models.MissionDrone
 		if err := rows.Scan(&md.MissionID, &md.DroneID, &md.AssignedBy, &md.AssignedAt, &md.PlannedPayloadKg); err != nil {
 			return nil, errors.Wrap(err, "failed to scan row")
 		}
-		missionDrones = append(missionDrones, &models.MissionDrone{
-			MissionID:        md.MissionID,
-			DroneID:          md.DroneID,
-			AssignedBy:       md.AssignedBy,
-			AssignedAt:       md.AssignedAt,
-			PlannedPayloadKg: md.PlannedPayloadKg,
-		})
+		missionDrones = append(missionDrones, &md)
 	}
 	return missionDrones, nil
 }
@@ -191,19 +156,12 @@ func (storage *PGstorage) GetAvailableDrones(ctx context.Context, launchBaseID u
 
 	var drones []*models.Drone
 	for rows.Next() {
-		var drone Drone
+		var drone models.Drone
 		err := rows.Scan(&drone.ID, &drone.Serial, &drone.Model, &drone.Status, &drone.LaunchBaseID, &drone.CreatedAt)
 		if err != nil {
 			return nil, errors.Wrap(err, "scan drone error")
 		}
-		drones = append(drones, &models.Drone{
-			ID:           drone.ID,
-			Serial:       drone.Serial,
-			Model:        drone.Model,
-			Status:       drone.Status,
-			LaunchBaseID: drone.LaunchBaseID,
-			CreatedAt:    drone.CreatedAt,
-		})
+		drones = append(drones, &drone)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, errors.Wrap(err, "rows error")
@@ -237,18 +195,12 @@ func (storage *PGstorage) GetMissionDronesByMissionID(ctx context.Context, missi
 
 	var missionDrones []*models.MissionDrone
 	for rows.Next() {
-		var md MissionDrone
+		var md models.MissionDrone
 		err := rows.Scan(&md.MissionID, &md.DroneID, &md.AssignedBy, &md.AssignedAt, &md.PlannedPayloadKg)
 		if err != nil {
 			return nil, errors.Wrap(err, "scan mission drone error")
 		}
-		missionDrones = append(missionDrones, &models.MissionDrone{
-			MissionID:        md.MissionID,
-			DroneID:          md.DroneID,
-			AssignedBy:       md.AssignedBy,
-			AssignedAt:       md.AssignedAt,
-			PlannedPayloadKg: md.PlannedPayloadKg,
-		})
+		missionDrones = append(missionDrones, &md)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, errors.Wrap(err, "rows error")

@@ -9,7 +9,11 @@ import (
 )
 
 func (storage *PGstorage) UpsertOperators(ctx context.Context, operators []*models.Operator) error {
-	query := storage.upsertOperatorsQuery(operators)
+	query := squirrel.Insert(operatorTableName).Columns(OperatorEmailCol, OperatorNameCol, OperatorCreatedAtCol).
+		PlaceholderFormat(squirrel.Dollar)
+	for _, op := range operators {
+		query = query.Values(op.Email, op.Name, op.CreatedAt)
+	}
 	queryText, args, err := query.ToSql()
 	if err != nil {
 		return errors.Wrap(err, "generate query error")
@@ -18,20 +22,15 @@ func (storage *PGstorage) UpsertOperators(ctx context.Context, operators []*mode
 	if err != nil {
 		return errors.Wrap(err, "exec query error")
 	}
-	return err
-}
-
-func (storage *PGstorage) upsertOperatorsQuery(operators []*models.Operator) squirrel.Sqlizer {
-	q := squirrel.Insert(operatorTableName).Columns(OperatorEmailCol, OperatorNameCol, OperatorCreatedAtCol).
-		PlaceholderFormat(squirrel.Dollar)
-	for _, op := range operators {
-		q = q.Values(op.Email, op.Name, op.CreatedAt)
-	}
-	return q
+	return nil
 }
 
 func (storage *PGstorage) UpsertLaunchBases(ctx context.Context, launchBases []*models.LaunchBase) error {
-	query := storage.upsertLaunchBasesQuery(launchBases)
+	query := squirrel.Insert(launchBaseTableName).Columns(LaunchBaseNameColumn, LaunchBaseLatColumn, LaunchBaseLonColumn, LaunchBaseAltColumn, LaunchBaseCreatedAtColumn).
+		PlaceholderFormat(squirrel.Dollar)
+	for _, lb := range launchBases {
+		query = query.Values(lb.Name, lb.Lat, lb.Lon, lb.Alt, lb.CreatedAt)
+	}
 	queryText, args, err := query.ToSql()
 	if err != nil {
 		return errors.Wrap(err, "generate query error")
@@ -40,20 +39,15 @@ func (storage *PGstorage) UpsertLaunchBases(ctx context.Context, launchBases []*
 	if err != nil {
 		return errors.Wrap(err, "exec query error")
 	}
-	return err
-}
-
-func (storage *PGstorage) upsertLaunchBasesQuery(launchBases []*models.LaunchBase) squirrel.Sqlizer {
-	q := squirrel.Insert(launchBaseTableName).Columns(LaunchBaseNameColumn, LaunchBaseLatColumn, LaunchBaseLonColumn, LaunchBaseAltColumn, LaunchBaseCreatedAtColumn).
-		PlaceholderFormat(squirrel.Dollar)
-	for _, lb := range launchBases {
-		q = q.Values(lb.Name, lb.Lat, lb.Lon, lb.Alt, lb.CreatedAt)
-	}
-	return q
+	return nil
 }
 
 func (storage *PGstorage) UpsertDrones(ctx context.Context, drones []*models.Drone) error {
-	query := storage.upsertDronesQuery(drones)
+	query := squirrel.Insert(droneTableName).Columns(DroneSerialColumn, DroneModelColumn, DroneStatusColumn, DroneLaunchBaseIDColumn, DroneCreatedAtColumn).
+		PlaceholderFormat(squirrel.Dollar)
+	for _, d := range drones {
+		query = query.Values(d.Serial, d.Model, d.Status, d.LaunchBaseID, d.CreatedAt)
+	}
 	queryText, args, err := query.ToSql()
 	if err != nil {
 		return errors.Wrap(err, "generate query error")
@@ -62,20 +56,17 @@ func (storage *PGstorage) UpsertDrones(ctx context.Context, drones []*models.Dro
 	if err != nil {
 		return errors.Wrap(err, "exec query error")
 	}
-	return err
-}
-
-func (storage *PGstorage) upsertDronesQuery(drones []*models.Drone) squirrel.Sqlizer {
-	q := squirrel.Insert(droneTableName).Columns(DroneSerialColumn, DroneModelColumn, DroneStatusColumn, DroneLaunchBaseIDColumn, DroneCreatedAtColumn).
-		PlaceholderFormat(squirrel.Dollar)
-	for _, d := range drones {
-		q = q.Values(d.Serial, d.Model, d.Status, d.LaunchBaseID, d.CreatedAt)
-	}
-	return q
+	return nil
 }
 
 func (storage *PGstorage) UpsertMissions(ctx context.Context, missions []*models.Mission) ([]*models.Mission, error) {
-	query := storage.upsertMissionsQuery(missions)
+	query := squirrel.Insert(missionTableName).Columns(MissionOperatorIDColumn, MissionLaunchBaseIDColumn, MissionStatusColumn, MissionDestinationLatColumn, MissionDestinationLonColumn, MissionDestinationAltColumn, MissionPayloadKgColumn, MissionCreatedAtColumn).
+		PlaceholderFormat(squirrel.Dollar)
+	for _, m := range missions {
+		query = query.Values(m.OperatorID, m.LaunchBaseID, m.Status, m.DestinationLat, m.DestinationLon, m.DestinationAlt, m.PayloadKg, m.CreatedAt)
+	}
+	query = query.Suffix("RETURNING id")
+
 	queryText, args, err := query.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "generate query error")
@@ -102,18 +93,14 @@ func (storage *PGstorage) UpsertMissions(ctx context.Context, missions []*models
 	return missions, nil
 }
 
-func (storage *PGstorage) upsertMissionsQuery(missions []*models.Mission) squirrel.Sqlizer {
-	q := squirrel.Insert(missionTableName).Columns(MissionOperatorIDColumn, MissionLaunchBaseIDColumn, MissionStatusColumn, MissionDestinationLatColumn, MissionDestinationLonColumn, MissionDestinationAltColumn, MissionPayloadKgColumn, MissionCreatedAtColumn).
-		PlaceholderFormat(squirrel.Dollar)
-	for _, m := range missions {
-		q = q.Values(m.OperatorID, m.LaunchBaseID, m.Status, m.DestinationLat, m.DestinationLon, m.DestinationAlt, m.PayloadKg, m.CreatedAt)
-	}
-	q = q.Suffix("RETURNING id")
-	return q
-}
-
 func (storage *PGstorage) UpsertMissionDrones(ctx context.Context, missionDrones []*models.MissionDrone) error {
-	query := storage.upsertMissionDronesQuery(missionDrones)
+	query := squirrel.Insert(missionDroneTableName).Columns(MissionDroneMissionIDColumn, MissionDroneDroneIDColumn, MissionDroneAssignedByColumn, MissionDroneAssignedAtColumn, MissionDronePlannedPayloadKgColumn).
+		PlaceholderFormat(squirrel.Dollar)
+	for _, md := range missionDrones {
+		query = query.Values(md.MissionID, md.DroneID, md.AssignedBy, md.AssignedAt, md.PlannedPayloadKg)
+	}
+	query = query.Suffix("ON CONFLICT (mission_id, drone_id) DO NOTHING")
+
 	queryText, args, err := query.ToSql()
 	if err != nil {
 		return errors.Wrap(err, "generate query error")
@@ -122,17 +109,7 @@ func (storage *PGstorage) UpsertMissionDrones(ctx context.Context, missionDrones
 	if err != nil {
 		return errors.Wrap(err, "exec query error")
 	}
-	return err
-}
-
-func (storage *PGstorage) upsertMissionDronesQuery(missionDrones []*models.MissionDrone) squirrel.Sqlizer {
-	q := squirrel.Insert(missionDroneTableName).Columns(MissionDroneMissionIDColumn, MissionDroneDroneIDColumn, MissionDroneAssignedByColumn, MissionDroneAssignedAtColumn, MissionDronePlannedPayloadKgColumn).
-		PlaceholderFormat(squirrel.Dollar)
-	for _, md := range missionDrones {
-		q = q.Values(md.MissionID, md.DroneID, md.AssignedBy, md.AssignedAt, md.PlannedPayloadKg)
-	}
-	q = q.Suffix("ON CONFLICT (mission_id, drone_id) DO NOTHING")
-	return q
+	return nil
 }
 
 func (storage *PGstorage) UpdateMissionStatus(ctx context.Context, missionID uint64, status string) error {
