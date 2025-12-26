@@ -1,12 +1,14 @@
 syntax = "proto3";
-
+#определяем синтаксис языка
+#определяем пакет
 package mission_api;
-
+#определяем путь куда положим
 option go_package = "github.com/Bolshevichok/dronedelivery/internal/pb/mission_api";
-
+#импортируем модели прото
 import "models/models.proto";
+#импорт гугл аннотаций 
 import "google/api/annotations.proto";
-
+# определяем сервис с двумя методами получения и отправки
 service MissionService {
   rpc UpsertMissions(UpsertMissionsRequest) returns (UpsertMissionsResponse) {
     option (google.api.http) = {
@@ -20,18 +22,20 @@ service MissionService {
     };
   }
 }
-
+# содержит массив миссий
 message UpsertMissionsRequest {
+  # repeated это когда много
   repeated models.Mission missions = 1;
 }
-
+# возвращаем пустоту
 message UpsertMissionsResponse {
 }
-
+# запрос миссии
 message GetMissionRequest {
   uint64 mission_id = 1;
 }
-
+# получение мисси по айдишнику
 message GetMissionResponse {
+  # тип поля, имя поля, уникальный номер поля
   models.Mission mission = 1;
 }

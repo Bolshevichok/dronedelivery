@@ -3,7 +3,7 @@ syntax = "proto3";
 package models;
 
 option go_package = "github.com/Bolshevichok/dronedelivery/internal/pb/models";
-
+# модельки
 message Mission {
   uint64 id = 1;
   uint64 op_id = 2;

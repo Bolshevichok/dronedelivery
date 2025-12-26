@@ -29,7 +29,6 @@ type KafkaConfig struct {
 	Port                   int    `yaml:"port"`
 	MissionsCreatedTopic   string `yaml:"missions_created_topic"`
 	MissionsLifecycleTopic string `yaml:"missions_lifecycle_topic"`
-	DroneLifecycleTopic    string `yaml:"drone_lifecycle_topic"`
 	DroneTelemetryTopic    string `yaml:"drone_telemetry_topic"`
 }
 
@@ -78,7 +77,6 @@ func loadConfigFromEnv() (*Config, error) {
 			Port:                   getEnvInt("KAFKA_PORT", 9092),
 			MissionsCreatedTopic:   getEnv("KAFKA_MISSIONS_CREATED_TOPIC", "missions.created"),
 			MissionsLifecycleTopic: getEnv("KAFKA_MISSIONS_LIFECYCLE_TOPIC", "missions.lifecycle"),
-			DroneLifecycleTopic:    getEnv("KAFKA_DRONE_LIFECYCLE_TOPIC", "drone.lifecycle"),
 			DroneTelemetryTopic:    getEnv("KAFKA_DRONE_TELEMETRY_TOPIC", "drone.telemetry"),
 		},
 		Redis: RedisConfig{
