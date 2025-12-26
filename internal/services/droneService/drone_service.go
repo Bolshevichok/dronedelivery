@@ -5,22 +5,24 @@ import (
 	"fmt"
 
 	"github.com/Bolshevichok/dronedelivery/config"
-	"github.com/Bolshevichok/dronedelivery/internal"
+	"github.com/Bolshevichok/dronedelivery/internal/models"
 	"github.com/segmentio/kafka-go"
 )
 
-// DroneService interface
-type DroneService interface {
-	ProcessMissionCreated(ctx context.Context, missionID uint64)
+type DroneStorage interface {
+	GetMissionsByIDs(ctx context.Context, IDs []uint64) ([]*models.Mission, error)
+	GetAvailableDrones(ctx context.Context, launchBaseID uint64) ([]*models.Drone, error)
+	GetLaunchBasesByIDs(ctx context.Context, IDs []uint64) ([]*models.LaunchBase, error)
+	UpdateMissionStatus(ctx context.Context, missionID uint64, status string) error
 }
 
-type DroneServiceImpl struct {
-	storage         internal.Storage
+type DroneService struct {
+	droneStorage    DroneStorage
 	lifecycleWriter *kafka.Writer
 	telemetryWriter *kafka.Writer
 }
 
-func NewDroneService(storage internal.Storage, cfg *config.Config) DroneService {
+func NewDroneService(droneStorage DroneStorage, cfg *config.Config) *DroneService {
 	lifecycleWriter := &kafka.Writer{
 		Addr:     kafka.TCP(fmt.Sprintf("%s:%d", cfg.Kafka.Host, cfg.Kafka.Port)),
 		Topic:    cfg.Kafka.DroneLifecycleTopic,
@@ -32,8 +34,8 @@ func NewDroneService(storage internal.Storage, cfg *config.Config) DroneService 
 		Balancer: &kafka.LeastBytes{},
 	}
 
-	return &DroneServiceImpl{
-		storage:         storage,
+	return &DroneService{
+		droneStorage:    droneStorage,
 		lifecycleWriter: lifecycleWriter,
 		telemetryWriter: telemetryWriter,
 	}

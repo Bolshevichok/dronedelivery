@@ -2,27 +2,27 @@ package mission_processor
 
 import (
 	"context"
-
-	"github.com/Bolshevichok/dronedelivery/internal/services/droneService"
-	"github.com/Bolshevichok/dronedelivery/internal/services/missionService"
 )
 
+type droneSvc interface {
+	ProcessMissionCreated(ctx context.Context, missionID uint64) error
+}
+
 type MissionProcessor interface {
-	ProcessMissionCreated(ctx context.Context, missionID uint64)
+	ProcessMissionCreated(ctx context.Context, missionID uint64) error
+	Handle(ctx context.Context, missionID uint64) error
 }
 
 type MissionProcessorImpl struct {
-	missionService missionService.MissionService
-	droneService   droneService.DroneService
+	droneSvc droneSvc
 }
 
-func NewMissionProcessor(missionService missionService.MissionService, droneService droneService.DroneService) *MissionProcessorImpl {
+func NewMissionProcessor(droneSvc droneSvc) *MissionProcessorImpl {
 	return &MissionProcessorImpl{
-		missionService: missionService,
-		droneService:   droneService,
+		droneSvc: droneSvc,
 	}
 }
 
-func (p *MissionProcessorImpl) ProcessMissionCreated(ctx context.Context, missionID uint64) {
-	p.droneService.ProcessMissionCreated(ctx, missionID)
+func (p *MissionProcessorImpl) ProcessMissionCreated(ctx context.Context, missionID uint64) error {
+	return p.droneSvc.ProcessMissionCreated(ctx, missionID)
 }

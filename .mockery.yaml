@@ -1,1 +1,17 @@
-packages: {}
+packages:
+    github.com/Bolshevichok/dronedelivery/internal/services/missionService:
+        config:
+            dir: "{{.InterfaceDir}}/mocks"
+            filename: "mocks.go"
+            outpkg: "mocks"
+            structname: "{{.InterfaceName}}"
+        interfaces:
+            MissionStorage:
+    github.com/Bolshevichok/dronedelivery/internal/services/droneService:
+        config:
+            dir: "{{.InterfaceDir}}/mocks"
+            filename: "mocks.go"
+            outpkg: "mocks"
+            structname: "{{.InterfaceName}}"
+        interfaces:
+            DroneStorage:

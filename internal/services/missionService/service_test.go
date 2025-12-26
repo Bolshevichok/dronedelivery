@@ -20,14 +20,14 @@ import (
 
 type MissionServiceTestSuite struct {
 	suite.Suite
-	mockStorage     *mockStorage.Storage
+	mockStorage     *mockStorage.MissionStorage
 	mockKafkaWriter *kafka.Writer
 	mockRedisClient *redis.Client
-	service         MissionService
+	service         *MissionService
 }
 
 func (suite *MissionServiceTestSuite) SetupTest() {
-	suite.mockStorage = &mockStorage.Storage{}
+	suite.mockStorage = &mockStorage.MissionStorage{}
 	suite.mockKafkaWriter = &kafka.Writer{}
 	suite.mockRedisClient = &redis.Client{}
 

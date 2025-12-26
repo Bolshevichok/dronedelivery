@@ -9,7 +9,7 @@ import (
 )
 
 type MissionComponents struct {
-	MissionService         missionService.MissionService
+	MissionService         *missionService.MissionService
 	MissionProcessor       mission_processor.MissionProcessor
 	MissionCreatedConsumer mission_created_consumer.MissionCreatedConsumer
 	MissionAPI             *mission_api.MissionAPI
@@ -23,7 +23,7 @@ func InitMissionComponents(cfg *config.Config) (*MissionComponents, error) {
 	droneSvc := InitDroneService(storage, cfg)
 
 	// Initialize processor
-	processor := InitMissionProcessor(missionSvc, droneSvc)
+	processor := InitMissionProcessor(droneSvc)
 
 	// Initialize consumer
 	consumer := InitMissionCreatedConsumer(cfg, processor)

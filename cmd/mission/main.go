@@ -17,7 +17,7 @@ func main() {
 	storage := bootstrap.InitPGStorage(cfg)
 	missionService := bootstrap.InitMissionService(storage, cfg)
 	droneService := bootstrap.InitDroneService(storage, cfg)
-	missionProcessor := bootstrap.InitMissionProcessor(missionService, droneService)
+	missionProcessor := bootstrap.InitMissionProcessor(droneService)
 	missionCreatedConsumer := bootstrap.InitMissionCreatedConsumer(cfg, missionProcessor)
 	missionApi := bootstrap.InitMissionAPI(missionService)
 

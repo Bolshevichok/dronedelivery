@@ -2,24 +2,27 @@ package telemetry_processor
 
 import (
 	"context"
-
-	"github.com/Bolshevichok/dronedelivery/internal/services/telemetryService"
 )
+
+type telemetrySvc interface {
+	SaveTelemetry(ctx context.Context, telemetry map[string]interface{}) error
+}
 
 type TelemetryProcessor interface {
 	ProcessTelemetry(ctx context.Context, telemetry map[string]interface{}) error
+	Handle(ctx context.Context, telemetry map[string]interface{}) error
 }
 
 type TelemetryProcessorImpl struct {
-	telemetryService telemetryService.TelemetryService
+	telemetrySvc telemetrySvc
 }
 
-func NewTelemetryProcessor(telemetryService telemetryService.TelemetryService) *TelemetryProcessorImpl {
+func NewTelemetryProcessor(telemetrySvc telemetrySvc) *TelemetryProcessorImpl {
 	return &TelemetryProcessorImpl{
-		telemetryService: telemetryService,
+		telemetrySvc: telemetrySvc,
 	}
 }
 
 func (p *TelemetryProcessorImpl) ProcessTelemetry(ctx context.Context, telemetry map[string]interface{}) error {
-	return p.telemetryService.SaveTelemetry(ctx, telemetry)
+	return p.telemetrySvc.SaveTelemetry(ctx, telemetry)
 }

@@ -5,7 +5,7 @@ import (
 )
 
 type missionProcessor interface {
-	ProcessMissionCreated(ctx context.Context, missionID uint64)
+	ProcessMissionCreated(ctx context.Context, missionID uint64) error
 }
 
 type MissionCreatedConsumer interface {

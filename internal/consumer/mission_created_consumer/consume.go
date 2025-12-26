@@ -35,6 +35,9 @@ func (c *MissionCreatedConsumerImpl) Consume(ctx context.Context) {
 			slog.Error("Invalid mission_id in event")
 			continue
 		}
-		c.processor.ProcessMissionCreated(ctx, uint64(missionID))
+		err = c.processor.ProcessMissionCreated(ctx, uint64(missionID))
+		if err != nil {
+			slog.Error("ProcessMissionCreated error", "error", err.Error())
+		}
 	}
 }
