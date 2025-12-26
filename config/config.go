@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"go.yaml.in/yaml/v4"
 )
@@ -43,9 +44,14 @@ type MissionServiceConfig struct {
 }
 
 func LoadConfig(filename string) (*Config, error) {
+	if filename == "" || filename == "env" {
+		return loadConfigFromEnv()
+	}
+
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
+		// Fallback to env if file not found
+		return loadConfigFromEnv()
 	}
 
 	var config Config
@@ -55,4 +61,50 @@ func LoadConfig(filename string) (*Config, error) {
 	}
 
 	return &config, nil
+}
+
+func loadConfigFromEnv() (*Config, error) {
+	config := &Config{
+		Database: DatabaseConfig{
+			Host:     getEnv("DATABASE_HOST", "localhost"),
+			Port:     getEnvInt("DATABASE_PORT", 5432),
+			Username: getEnv("DATABASE_USERNAME", "admin"),
+			Password: getEnv("DATABASE_PASSWORD", "admin"),
+			DBName:   getEnv("DATABASE_NAME", "dronedelivery"),
+			SSLMode:  getEnv("DATABASE_SSL_MODE", "disable"),
+		},
+		Kafka: KafkaConfig{
+			Host:                   getEnv("KAFKA_HOST", "localhost"),
+			Port:                   getEnvInt("KAFKA_PORT", 9092),
+			MissionsCreatedTopic:   getEnv("KAFKA_MISSIONS_CREATED_TOPIC", "missions.created"),
+			MissionsLifecycleTopic: getEnv("KAFKA_MISSIONS_LIFECYCLE_TOPIC", "missions.lifecycle"),
+			DroneLifecycleTopic:    getEnv("KAFKA_DRONE_LIFECYCLE_TOPIC", "drone.lifecycle"),
+			DroneTelemetryTopic:    getEnv("KAFKA_DRONE_TELEMETRY_TOPIC", "drone.telemetry"),
+		},
+		Redis: RedisConfig{
+			Host: getEnv("REDIS_HOST", "localhost"),
+			Port: getEnvInt("REDIS_PORT", 6379),
+		},
+		MissionService: MissionServiceConfig{
+			Host: getEnv("MISSION_SERVICE_HOST", "localhost"),
+			Port: getEnvInt("MISSION_SERVICE_PORT", 8080),
+		},
+	}
+	return config, nil
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+func getEnvInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		if intValue, err := strconv.Atoi(value); err == nil {
+			return intValue
+		}
+	}
+	return defaultValue
 }

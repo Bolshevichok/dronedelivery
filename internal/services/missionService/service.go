@@ -40,3 +40,12 @@ func NewMissionService(ctx context.Context, missionStorage MissionStorage, cfg *
 		redisClient:    redisClient,
 	}
 }
+
+func (s *MissionService) GetDroneTelemetry(ctx context.Context, droneID string) (string, error) {
+	key := fmt.Sprintf("drone:%s", droneID)
+	val, err := s.redisClient.Get(ctx, key).Result()
+	if err != nil {
+		return "", fmt.Errorf("failed to get telemetry for drone %s: %w", droneID, err)
+	}
+	return val, nil
+}
