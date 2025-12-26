@@ -14,3 +14,4 @@ grpcurl -plaintext -d '{\"missions\":[{\"op_id\":1,\"base_id\":1,\"status\":\"cr
 - `missions.created` — миссия создана (Mission Service -> Drone Service)
 - `missions.lifecycle` — изменения статуса (Drone Service -> Mission Service)
 - `drone.telemetry` — телеметрия (Drone Service -> Telemetry Extractor)
+LRANGE telemetry_queue 0 -1
