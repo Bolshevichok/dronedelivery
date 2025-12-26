@@ -11,7 +11,6 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-
 func (s *DroneService) ProcessMissionCreated(ctx context.Context, mission *models.Mission) error {
 	if mission == nil {
 		return fmt.Errorf("mission is nil")
