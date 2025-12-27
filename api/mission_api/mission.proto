@@ -41,7 +41,7 @@ service MissionService {
 }
 
 message UpsertMissionsRequest {
-  # repeated это когда много
+  // repeated for multiple missions
   repeated models.Mission missions = 1;
 }
 

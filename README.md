@@ -10,11 +10,21 @@ docker compose up -d --build
 ```
 grpcurl -plaintext -d '{\"missions\":[{\"op_id\":1,\"base_id\":1,\"status\":\"created\",\"lat\":55.7558,\"lon\":37.6173,\"alt\":100,\"payload\":1.2}]}' localhost:8080 mission_api.MissionService/UpsertMissions
 ```
-grpcurl -plaintext -d '{"operator":{"email":"operator@example.com","name":"John Doe"}}' localhost:8080 mission_api.MissionService/CreateOperator
 
-grpcurl -plaintext -d '{"launch_base":{"name":"Base Alpha","lat":55.7558,"lon":37.6173,"alt":100}}' localhost:8080 mission_api.MissionService/CreateLaunchBase
+Создать оператора:
+```
+grpcurl -plaintext -d '{\"operator\":{\"email\":\"operator2@example.com\",\"name\":\"John\\u0020Doe\"}}' localhost:8080 mission_api.MissionService/CreateOperator
+```
 
-grpcurl -plaintext -d '{"drone":{"serial":"DRONE-001","model":"Model X","status":"available","base_id":1}}' localhost:8080 mission_api.MissionService/CreateDrone
+Создать базу запуска:
+```
+grpcurl -plaintext -d '{\"launch_base\":{\"name\":\"Base\\u0020Alpha\",\"lat\":55.7558,\"lon\":37.6173,\"alt\":100}}' localhost:8080 mission_api.MissionService/CreateLaunchBase
+```
+
+Создать дрона:
+```
+grpcurl -plaintext -d '{\"drone\":{\"serial\":\"DRONE-002\",\"model\":\"Model\\u0020X\",\"status\":\"available\",\"base_id\":1}}' localhost:8080 mission_api.MissionService/CreateDrone
+```
 
 
 - `missions.created` — миссия создана (Mission Service -> Drone Service)
