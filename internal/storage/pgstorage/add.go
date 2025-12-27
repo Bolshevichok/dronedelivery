@@ -124,3 +124,54 @@ func (storage *PGstorage) UpdateMissionStatus(ctx context.Context, missionID uin
 	}
 	return nil
 }
+
+func (storage *PGstorage) CreateOperator(ctx context.Context, operator *models.Operator) (uint64, error) {
+	query := squirrel.Insert(operatorTableName).Columns(OperatorEmailCol, OperatorNameCol, OperatorCreatedAtCol).
+		Values(operator.Email, operator.Name, operator.CreatedAt).
+		Suffix("RETURNING " + OperatorIDColumn).
+		PlaceholderFormat(squirrel.Dollar)
+	queryText, args, err := query.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "generate query error")
+	}
+	var id uint64
+	err = storage.db.QueryRow(ctx, queryText, args...).Scan(&id)
+	if err != nil {
+		return 0, errors.Wrap(err, "exec query error")
+	}
+	return id, nil
+}
+
+func (storage *PGstorage) CreateLaunchBase(ctx context.Context, launchBase *models.LaunchBase) (uint64, error) {
+	query := squirrel.Insert(launchBaseTableName).Columns(LaunchBaseNameColumn, LaunchBaseLatColumn, LaunchBaseLonColumn, LaunchBaseAltColumn, LaunchBaseCreatedAtColumn).
+		Values(launchBase.Name, launchBase.Lat, launchBase.Lon, launchBase.Alt, launchBase.CreatedAt).
+		Suffix("RETURNING " + LaunchBaseIDColumn).
+		PlaceholderFormat(squirrel.Dollar)
+	queryText, args, err := query.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "generate query error")
+	}
+	var id uint64
+	err = storage.db.QueryRow(ctx, queryText, args...).Scan(&id)
+	if err != nil {
+		return 0, errors.Wrap(err, "exec query error")
+	}
+	return id, nil
+}
+
+func (storage *PGstorage) CreateDrone(ctx context.Context, drone *models.Drone) (uint64, error) {
+	query := squirrel.Insert(droneTableName).Columns(DroneSerialColumn, DroneModelColumn, DroneStatusColumn, DroneLaunchBaseIDColumn, DroneCreatedAtColumn).
+		Values(drone.Serial, drone.Model, drone.Status, drone.LaunchBaseID, drone.CreatedAt).
+		Suffix("RETURNING " + DroneIDColumn).
+		PlaceholderFormat(squirrel.Dollar)
+	queryText, args, err := query.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "generate query error")
+	}
+	var id uint64
+	err = storage.db.QueryRow(ctx, queryText, args...).Scan(&id)
+	if err != nil {
+		return 0, errors.Wrap(err, "exec query error")
+	}
+	return id, nil
+}

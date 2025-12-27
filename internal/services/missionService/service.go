@@ -19,6 +19,9 @@ type MissionStorage interface {
 	GetLaunchBasesByIDs(ctx context.Context, IDs []uint64) ([]*models.LaunchBase, error)
 	GetDronesByIDs(ctx context.Context, IDs []uint64) ([]*models.Drone, error)
 	GetMissionDronesByMissionID(ctx context.Context, missionID uint64) ([]*models.MissionDrone, error)
+	CreateOperator(ctx context.Context, operator *models.Operator) (uint64, error)
+	CreateLaunchBase(ctx context.Context, launchBase *models.LaunchBase) (uint64, error)
+	CreateDrone(ctx context.Context, drone *models.Drone) (uint64, error)
 }
 
 type MissionService struct {
@@ -53,4 +56,16 @@ func (s *MissionService) GetDroneTelemetry(ctx context.Context, droneID string) 
 		return "", fmt.Errorf("failed to get telemetry for drone %s: %w", droneID, err)
 	}
 	return val, nil
+}
+
+func (s *MissionService) CreateOperator(ctx context.Context, operator *models.Operator) (uint64, error) {
+	return s.missionStorage.CreateOperator(ctx, operator)
+}
+
+func (s *MissionService) CreateLaunchBase(ctx context.Context, launchBase *models.LaunchBase) (uint64, error) {
+	return s.missionStorage.CreateLaunchBase(ctx, launchBase)
+}
+
+func (s *MissionService) CreateDrone(ctx context.Context, drone *models.Drone) (uint64, error) {
+	return s.missionStorage.CreateDrone(ctx, drone)
 }

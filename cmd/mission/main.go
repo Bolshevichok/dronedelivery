@@ -18,11 +18,12 @@ func main() {
 	missionService := bootstrap.InitMissionService(storage, cfg)
 	missionApi := bootstrap.InitMissionAPI(missionService)
 
-	redisClient := bootstrap.InitRedis(cfg)
-	redisConsumer := bootstrap.InitRedisConsumer(redisClient, "telemetry_queue")
+	// redisClient := bootstrap.InitRedis(cfg)
+	// redisConsumer := bootstrap.InitRedisConsumer(redisClient, "telemetry_queue")
 
 	missionLifecycleProcessor := bootstrap.InitMissionLifecycleProcessor(missionService)
 	missionLifecycleConsumer := bootstrap.InitMissionLifecycleConsumer(cfg, missionLifecycleProcessor)
 
-	bootstrap.AppRun(missionApi, redisConsumer, missionLifecycleConsumer)
+	// bootstrap.AppRun(missionApi, redisConsumer, missionLifecycleConsumer)
+	bootstrap.AppRun(missionApi, missionLifecycleConsumer)
 }

@@ -20,6 +20,24 @@ service MissionService {
       get: "/missions/{mission_id}"
     };
   }
+  rpc CreateOperator(CreateOperatorRequest) returns (CreateOperatorResponse) {
+    option (google.api.http) = {
+      post: "/operators"
+      body: "*"
+    };
+  }
+  rpc CreateLaunchBase(CreateLaunchBaseRequest) returns (CreateLaunchBaseResponse) {
+    option (google.api.http) = {
+      post: "/launch-bases"
+      body: "*"
+    };
+  }
+  rpc CreateDrone(CreateDroneRequest) returns (CreateDroneResponse) {
+    option (google.api.http) = {
+      post: "/drones"
+      body: "*"
+    };
+  }
 }
 
 message UpsertMissionsRequest {
@@ -36,4 +54,28 @@ message GetMissionRequest {
 
 message GetMissionResponse {
   models.Mission mission = 1;
+}
+
+message CreateOperatorRequest {
+  models.Operator operator = 1;
+}
+
+message CreateOperatorResponse {
+  uint64 id = 1;
+}
+
+message CreateLaunchBaseRequest {
+  models.LaunchBase launch_base = 1;
+}
+
+message CreateLaunchBaseResponse {
+  uint64 id = 1;
+}
+
+message CreateDroneRequest {
+  models.Drone drone = 1;
+}
+
+message CreateDroneResponse {
+  uint64 id = 1;
 }
